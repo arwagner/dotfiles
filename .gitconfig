@@ -1,0 +1,9 @@
+[user]
+    name = Andrew Wagner
+    email = 113338+arwagner@users.noreply.github.com
+
+[core]
+    editor = code
+
+[alias]
+    hist = log --decorate --oneline --graph
