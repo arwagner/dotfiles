@@ -3,7 +3,9 @@
     email = 113338+arwagner@users.noreply.github.com
 
 [core]
-    editor = code
+    editor = code --wait --reuse-window
 
 [alias]
     hist = log --decorate --oneline --graph
+[sequence]
+	editor = code --wait --reuse-window
