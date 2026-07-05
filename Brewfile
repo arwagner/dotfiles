@@ -1,3 +1,4 @@
+tap "felixkratz/formulae", "https://github.com/FelixKratz/homebrew-formulae"
 tap "homebrew/bundle"
 tap "mongodb/brew"
 tap "nikitabobko/tap"
@@ -59,6 +60,8 @@ brew "xboard"
 brew "yt-dlp"
 # General-purpose lossless data-compression library
 brew "zlib"
+# A window border system for macOS
+brew "felixkratz/formulae/borders", trusted: true
 # AeroSpace is an i3-like tiling window manager for macOS
 cask "nikitabobko/tap/aerospace"
 # Compact TeX distribution as alternative to the full TeX Live / MacTeX
