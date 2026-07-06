@@ -68,6 +68,8 @@ cask "nikitabobko/tap/aerospace"
 cask "basictex"
 # Clipboard manager for developers
 cask "flycut"
+# Control your tools with a few keystrokes
+cask "raycast"
 # System monitor for the menu bar
 cask "stats"
 # Open-source version of the X.Org X Window System
