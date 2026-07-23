@@ -104,15 +104,16 @@ ctrl-alt-j = 'exec-and-forget /Users/andrew/dotfiles/claude/fleet-status.sh jump
 cmd-shift-space = 'exec-and-forget open "raycast://extensions/limonkufu/aerospace/switchApps"'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#focus
-alt-h = 'focus left'
-alt-j = 'focus down'
-alt-k = 'focus up'
+# ijkl layout (i=up, j=left, k=down, l=right) instead of vim hjkl
+alt-i = 'focus up'
+alt-j = 'focus left'
+alt-k = 'focus down'
 alt-l = 'focus right'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#move
-alt-shift-h = 'move left'
-alt-shift-j = 'move down'
-alt-shift-k = 'move up'
+alt-shift-i = 'move up'
+alt-shift-j = 'move left'
+alt-shift-k = 'move down'
 alt-shift-l = 'move right'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#resize
@@ -136,7 +137,6 @@ alt-d = 'workspace D'
 alt-e = 'workspace E'
 alt-f = 'workspace F'
 alt-g = 'workspace G'
-alt-i = 'workspace I'
 alt-m = 'workspace M'
 alt-n = 'workspace N'
 alt-o = 'workspace O'
@@ -169,7 +169,6 @@ alt-shift-d = 'move-node-to-workspace D'
 alt-shift-e = 'move-node-to-workspace E'
 alt-shift-f = 'move-node-to-workspace F'
 alt-shift-g = 'move-node-to-workspace G'
-alt-shift-i = 'move-node-to-workspace I'
 alt-shift-m = 'move-node-to-workspace M'
 alt-shift-n = 'move-node-to-workspace N'
 alt-shift-o = 'move-node-to-workspace O'
@@ -203,9 +202,9 @@ r = ['flatten-workspace-tree', 'mode main'] # reset layout
 f = ['layout floating tiling', 'mode main'] # Toggle between floating and tiling layout
 backspace = ['close-all-windows-but-current', 'mode main']
 
-alt-shift-h = ['join-with left', 'mode main']
-alt-shift-j = ['join-with down', 'mode main']
-alt-shift-k = ['join-with up', 'mode main']
+alt-shift-i = ['join-with up', 'mode main']
+alt-shift-j = ['join-with left', 'mode main']
+alt-shift-k = ['join-with down', 'mode main']
 alt-shift-l = ['join-with right', 'mode main']
 
 ctrl-alt-tab = 'focus-monitor next'
