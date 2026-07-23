@@ -100,6 +100,9 @@ alt-comma = 'layout accordion horizontal vertical'
 ctrl-alt-w = 'exec-and-forget /Users/andrew/dotfiles/claude/fleet-status.sh list'
 ctrl-alt-j = 'exec-and-forget /Users/andrew/dotfiles/claude/fleet-status.sh jump'
 
+# Fuzzy window/app finder across all workspaces (Raycast "Switch Apps in Workspace")
+cmd-shift-space = 'exec-and-forget open "raycast://extensions/limonkufu/aerospace/switchApps"'
+
 # See: https://nikitabobko.github.io/AeroSpace/commands#focus
 alt-h = 'focus left'
 alt-j = 'focus down'
