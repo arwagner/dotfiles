@@ -39,8 +39,3 @@ export NVM_DIR="$HOME/.nvm"
 export PATH="$PATH:/Users/andrew/.lmstudio/bin"
 # End of LM Studio CLI section
 
-# New Terminal WINDOW in the current dir. Apple Terminal's ⌘N always opens in
-# $HOME (only new TABS inherit the cwd); this gives a real, AeroSpace-tileable
-# window right where you are. Optional arg overrides the dir: `nw ~/code`.
-nw() { open -a Terminal "${1:-$PWD}"; }
-
