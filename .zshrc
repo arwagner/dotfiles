@@ -20,20 +20,20 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
 
-if [ -f "$HOME/Dropbox/andrew/.env" ]; then
-  set -a
-  source "$HOME/Dropbox/andrew/.env"
-  set +a
-fi
+# if [ -f "$HOME/Dropbox/andrew/.env" ]; then
+#   set -a
+#  source "$HOME/Dropbox/andrew/.env"
+#  set +a
+#fi
 
-export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
-export ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY"
-export ANTHROPIC_API_KEY=""
-
-CLAUDE_MODEL="mistralai/mistral-large-2512"
-
-# Agentic OS - command centre launcher
-alias centre='bash "/Users/andrew/Dropbox/andrew/code/agentic-os/scripts/centre.sh"'
+# `claude`    -> your Claude subscription (no env overrides)
+# `claude-or` -> route this invocation through OpenRouter
+# claude-or() {
+#  ANTHROPIC_BASE_URL="https://openrouter.ai/api" \
+#  ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY" \
+#  ANTHROPIC_API_KEY="" \
+#  command claude "$@"
+#}
 
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/andrew/.lmstudio/bin"
