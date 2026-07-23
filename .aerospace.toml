@@ -94,6 +94,12 @@ outer.right =      0
 alt-slash = 'layout tiles horizontal vertical'
 alt-comma = 'layout accordion horizontal vertical'
 
+# Claude fleet overview:
+#   ctrl-alt-w -> notification summary of which Claude sessions are waiting + where
+#   ctrl-alt-j -> jump focus to the next waiting session's window (round-robin)
+ctrl-alt-w = 'exec-and-forget /Users/andrew/dotfiles/claude/fleet-status.sh list'
+ctrl-alt-j = 'exec-and-forget /Users/andrew/dotfiles/claude/fleet-status.sh jump'
+
 # See: https://nikitabobko.github.io/AeroSpace/commands#focus
 alt-h = 'focus left'
 alt-j = 'focus down'

@@ -52,6 +52,8 @@ brew "python@3.11"
 brew "python@3.12"
 # Safe, concurrent, practical language
 brew "rust"
+# Send macOS User Notifications from the command-line
+brew "terminal-notifier"
 # Extremely fast Python package installer and resolver, written in Rust
 brew "uv"
 # Graphical user interface for chess
