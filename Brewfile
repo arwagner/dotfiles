@@ -65,13 +65,15 @@ brew "zlib"
 # A window border system for macOS
 brew "felixkratz/formulae/borders", trusted: true
 # Custom macOS statusbar with shell plugin, interaction and graph support
-brew "felixkratz/formulae/sketchybar"
+brew "felixkratz/formulae/sketchybar", restart_service: :changed
 # AeroSpace is an i3-like tiling window manager for macOS
 cask "nikitabobko/tap/aerospace"
 # Compact TeX distribution as alternative to the full TeX Live / MacTeX
 cask "basictex"
 # Clipboard manager for developers
 cask "flycut"
+# Nerd Font patched Hack — supplies the icon glyphs sketchybar renders
+cask "font-hack-nerd-font"
 # Control your tools with a few keystrokes
 cask "raycast"
 # System monitor for the menu bar
