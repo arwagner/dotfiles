@@ -3,6 +3,20 @@
   "lines": [
     [
       {
+        "id": "5",
+        "type": "current-working-dir",
+        "color": "blue",
+        "rawValue": true,
+        "metadata": {
+          "abbreviateHome": "true"
+        }
+      },
+      {
+        "id": "6",
+        "type": "git-branch",
+        "color": "magenta"
+      },
+      {
         "id": "1",
         "type": "context-length",
         "color": "yellow",
