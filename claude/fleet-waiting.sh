@@ -32,4 +32,9 @@ if command -v terminal-notifier >/dev/null 2>&1; then
 else
   osascript -e "display notification \"${name//\"/}\" with title \"$title\"" >/dev/null 2>&1
 fi
+
+# Repaint the workspace indicators, which show a glyph for the workspace this
+# session's terminal lives in. Best effort: the hook must never fail because
+# the bar happens not to be running.
+/opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change >/dev/null 2>&1
 exit 0

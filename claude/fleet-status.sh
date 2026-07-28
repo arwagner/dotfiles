@@ -23,7 +23,16 @@ notify() { # $1 = title, $2 = message
 }
 
 shopt -s nullglob
-markers=("$dir"/*)
+# Markers also record sessions that are merely busy (see fleet-mark.sh). This
+# overview is about who needs you, so keep only the ones that do — and count
+# those, or a fleet of busy sessions would report as "no matching windows"
+# rather than as clear.
+markers=()
+for m in "$dir"/*; do
+  [ -f "$m" ] || continue
+  [ "$(cut -f2 "$m")" = "working" ] && continue
+  markers+=("$m")
+done
 if [ ${#markers[@]} -eq 0 ]; then
   [ "$mode" = "list" ] && notify "🟢 Fleet clear" "No sessions waiting"
   exit 0
