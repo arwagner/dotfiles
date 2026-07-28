@@ -88,9 +88,8 @@ sketchybar --add item chevron left \
 
 sketchybar --add item clock right \
            --set clock update_freq=1 icon=  script="$PLUGIN_DIR/clock.sh" \
-           --add item volume right \
-           --set volume script="$PLUGIN_DIR/volume.sh" \
-           --subscribe volume volume_change \
+           --add item headphones right \
+           --set headphones update_freq=60 script="$PLUGIN_DIR/headphones.sh" \
            --add item battery right \
            --set battery update_freq=120 script="$PLUGIN_DIR/battery.sh" \
            --subscribe battery system_woke power_source_change
