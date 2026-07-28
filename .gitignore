@@ -1,0 +1,3 @@
+# Raycast keeps ~60MB of downloaded extension bundles and node_modules here.
+# Machine-local build output, not configuration.
+.config/raycast/
