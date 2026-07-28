@@ -44,12 +44,21 @@ sketchybar --default "${default[@]}"
 sketchybar --add event aerospace_workspace_change
 
 workspace=(
+  # Item padding sits outside the rounded background, so this is the gap
+  # between one workspace pill and the next: 16 either side, 32 in total.
+  padding_left=16
+  padding_right=16
   icon.padding_left=7
-  icon.padding_right=7
+  icon.padding_right=4
   background.color=0x40ffffff
   background.corner_radius=5
   background.height=25
   background.drawing=off
+  # The label carries the app icons, which are ligatures only this font
+  # renders; the icon keeps the workspace key in the readable text font.
+  label.font="sketchybar-app-font:Regular:16.0"
+  label.padding_left=0
+  label.padding_right=7
   label.drawing=off
   drawing=off
 )
@@ -65,7 +74,7 @@ done
 # A single hidden item refreshes every indicator at once, so switching
 # workspaces costs three AeroSpace queries rather than one per workspace.
 sketchybar --add item workspaces left \
-           --set workspaces drawing=off script="$PLUGIN_DIR/aerospace.sh" \
+           --set workspaces drawing=off update_freq=30 script="$PLUGIN_DIR/aerospace.sh" \
            --subscribe workspaces aerospace_workspace_change space_windows_change front_app_switched
 
 ##### Adding Right Items #####

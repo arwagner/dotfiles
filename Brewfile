@@ -74,6 +74,8 @@ cask "basictex"
 cask "flycut"
 # Nerd Font patched Hack — supplies the icon glyphs sketchybar renders
 cask "font-hack-nerd-font"
+# App icons as ligatures, for the per-workspace app indicators
+cask "font-sketchybar-app-font"
 # Control your tools with a few keystrokes
 cask "raycast"
 # System monitor for the menu bar
