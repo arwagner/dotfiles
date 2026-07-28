@@ -16,6 +16,13 @@ after-startup-command = [
   'exec-and-forget borders active_color=0xffff0000 inactive_color=0xff494d64 width=5.0'
 ]
 
+# Keep the sketchybar workspace indicators in sync. Absolute path because this
+# runs with AeroSpace's environment, which does not include Homebrew's bin dir.
+exec-on-workspace-change = [
+  '/bin/bash', '-c',
+  '/opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
+]
+
 # Start AeroSpace at login
 start-at-login = true
 
