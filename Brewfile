@@ -65,7 +65,7 @@ brew "zlib"
 # A window border system for macOS
 brew "felixkratz/formulae/borders", trusted: true
 # Custom macOS statusbar with shell plugin, interaction and graph support
-brew "felixkratz/formulae/sketchybar", restart_service: :changed
+brew "felixkratz/formulae/sketchybar"
 # AeroSpace is an i3-like tiling window manager for macOS
 cask "nikitabobko/tap/aerospace", trusted: true
 # Compact TeX distribution as alternative to the full TeX Live / MacTeX

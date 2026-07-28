@@ -14,6 +14,11 @@ after-login-command = []
 # Available commands : https://nikitabobko.github.io/AeroSpace/commands
 after-startup-command = [
   'exec-and-forget borders active_color=0xffff0000 inactive_color=0xff494d64 width=5.0',
+  # Started here rather than by `brew services` so that AeroSpace, a real app
+  # bundle, is the responsible process for macOS privacy prompts. A launchd
+  # agent cannot be granted Calendar access: no consent prompt is ever shown
+  # for it, and icalBuddy then blocks forever instead of failing.
+  'exec-and-forget /opt/homebrew/bin/sketchybar',
   # Workspace display names (see the rename-workspace command) only describe the
   # current session, so drop them and repaint whenever AeroSpace starts.
   'exec-and-forget /bin/bash -c "rm -f $HOME/.cache/sketchybar/workspace-names; /opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change"'
