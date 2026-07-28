@@ -13,7 +13,10 @@ after-login-command = []
 # 'after-startup-command' is run after 'after-login-command'
 # Available commands : https://nikitabobko.github.io/AeroSpace/commands
 after-startup-command = [
-  'exec-and-forget borders active_color=0xffff0000 inactive_color=0xff494d64 width=5.0'
+  'exec-and-forget borders active_color=0xffff0000 inactive_color=0xff494d64 width=5.0',
+  # Workspace display names (see the rename-workspace command) only describe the
+  # current session, so drop them and repaint whenever AeroSpace starts.
+  'exec-and-forget /bin/bash -c "rm -f $HOME/.cache/sketchybar/workspace-names; /opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change"'
 ]
 
 # Keep the sketchybar workspace indicators in sync. Absolute path because this

@@ -15,14 +15,28 @@
 focused="${FOCUSED_WORKSPACE:-$(aerospace list-workspaces --focused)}"
 occupied="$(aerospace list-workspaces --monitor all --empty no)"
 
+# Display names set by the rename-workspace command, tab separated. Absent
+# until something has been renamed, and wiped whenever AeroSpace starts. Read it
+# once up front: renaming replaces the file and AeroSpace's startup deletes it,
+# so testing and then reading it per workspace races with both.
+names="$(cat "$HOME/.cache/sketchybar/workspace-names" 2>/dev/null || true)"
+
 args=()
 for sid in $(aerospace list-workspaces --all); do
-  if [ "$sid" = "$focused" ]; then
-    args+=(--set space."$sid" drawing=on background.drawing=on)
-  elif printf '%s\n' "$occupied" | grep -qx -- "$sid"; then
-    args+=(--set space."$sid" drawing=on background.drawing=off)
+  name="$(printf '%s\n' "$names" | awk -F'\t' -v s="$sid" '$1 == s { print $2; exit }')"
+
+  if [ -n "$name" ]; then
+    label=(label="$name" label.drawing=on)
   else
-    args+=(--set space."$sid" drawing=off background.drawing=off)
+    label=(label.drawing=off)
+  fi
+
+  if [ "$sid" = "$focused" ]; then
+    args+=(--set space."$sid" drawing=on background.drawing=on "${label[@]}")
+  elif printf '%s\n' "$occupied" | grep -qx -- "$sid"; then
+    args+=(--set space."$sid" drawing=on background.drawing=off "${label[@]}")
+  else
+    args+=(--set space."$sid" drawing=off background.drawing=off "${label[@]}")
   fi
 done
 

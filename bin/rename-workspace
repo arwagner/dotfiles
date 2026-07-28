@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+# Give an AeroSpace workspace a display name in the sketchybar indicators:
+#
+#   rename-workspace P Personal
+#   rename-workspace P            # clear the name again
+#
+# AeroSpace has no concept of workspace names, so they are kept in a state file
+# that .aerospace.toml wipes on startup. A name therefore survives a sketchybar
+# restart but not an AeroSpace one, which is the intent: the names describe what
+# you happen to have open right now.
+
+set -euo pipefail
+
+# Raycast and launchd start us with a bare PATH that has no Homebrew in it, and
+# sketchybar's client aborts outright if $USER is missing.
+PATH="/opt/homebrew/bin:$PATH"
+export USER="${USER:-$(id -un)}"
+
+NAMES_FILE="$HOME/.cache/sketchybar/workspace-names"
+
+if [ $# -lt 1 ]; then
+  echo "usage: rename-workspace <workspace> [name]" >&2
+  exit 64
+fi
+
+workspace="$1"
+shift
+name="$*"
+
+if ! aerospace list-workspaces --all | grep -qx -- "$workspace"; then
+  echo "rename-workspace: no such workspace: $workspace" >&2
+  exit 1
+fi
+
+# The state file is tab separated, one workspace per line.
+case "$name" in
+  *$'\t'* | *$'\n'*)
+    echo "rename-workspace: name cannot contain tabs or newlines" >&2
+    exit 1
+    ;;
+esac
+
+mkdir -p "$(dirname "$NAMES_FILE")"
+touch "$NAMES_FILE"
+
+tmp="$(mktemp)"
+grep -v -- "^$workspace"$'\t' "$NAMES_FILE" > "$tmp" || true
+if [ -n "$name" ]; then
+  printf '%s\t%s\n' "$workspace" "$name" >> "$tmp"
+fi
+mv "$tmp" "$NAMES_FILE"
+
+# Repaint now instead of waiting for the next workspace switch.
+sketchybar --trigger aerospace_workspace_change \
+  FOCUSED_WORKSPACE="$(aerospace list-workspaces --focused)"
