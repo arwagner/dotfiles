@@ -1,0 +1,83 @@
+{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/Users/andrew/dotfiles/claude/fleet-waiting.sh\" idle",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/Users/andrew/dotfiles/claude/fleet-waiting.sh\" permission",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/Users/andrew/dotfiles/claude/fleet-mark.sh\" working",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/Users/andrew/dotfiles/claude/fleet-mark.sh\" idle",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/Users/andrew/dotfiles/claude/fleet-clear.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "npx ccstatusline@latest"
+  },
+  "enabledPlugins": {
+    "spec-flow@skylight": true
+  },
+  "extraKnownMarketplaces": {
+    "skylight": {
+      "source": {
+        "source": "github",
+        "repo": "skylight-hq/spec-flow"
+      }
+    }
+  },
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
+  "DISABLE_TELEMETRY": "1",
+  "DISABLE_ERROR_REPORTING": "1",
+  "DISABLE_BUG_COMMAND": "1",
+  "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
+  "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+  "autoUpdates": false
+}
