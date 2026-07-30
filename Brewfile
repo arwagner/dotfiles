@@ -82,11 +82,15 @@ cask "font-sketchybar-app-font"
 cask "raycast"
 # System monitor for the menu bar
 cask "stats"
+# Open-source code editor — the vscode entries below need its CLI
+cask "visual-studio-code"
 # Open-source version of the X.Org X Window System
 cask "xquartz"
 vscode "anthropic.claude-code"
 vscode "boundary.baml-extension"
 vscode "castwide.ruby-debug"
+vscode "dart-code.dart-code"
+vscode "dart-code.flutter"
 vscode "marhaendev.word-count-selection"
 vscode "mathematic.vscode-pdf"
 vscode "ms-vscode.vscode-speech"
