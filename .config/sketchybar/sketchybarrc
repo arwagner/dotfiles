@@ -92,7 +92,13 @@ sketchybar --add item workspaces left \
 sketchybar --add item clock right \
            --set clock update_freq=1 icon=  script="$PLUGIN_DIR/clock.sh" \
            --add item headphones right \
-           --set headphones update_freq=60 script="$PLUGIN_DIR/headphones.sh" \
+           --set headphones update_freq=30 script="$PLUGIN_DIR/headphones.sh" \
+                 click_script="open 'x-apple.systempreferences:com.apple.Sound-Settings.extension'" \
+           --subscribe headphones system_woke \
+           --add item bluetooth right \
+           --set bluetooth update_freq=30 script="$PLUGIN_DIR/bluetooth.sh" \
+                 click_script="open 'x-apple.systempreferences:com.apple.BluetoothSettings'" \
+           --subscribe bluetooth system_woke \
            --add item battery right \
            --set battery update_freq=120 script="$PLUGIN_DIR/battery.sh" \
            --subscribe battery system_woke power_source_change \
