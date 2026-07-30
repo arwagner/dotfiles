@@ -72,6 +72,8 @@ brew "felixkratz/formulae/sketchybar"
 cask "nikitabobko/tap/aerospace", trusted: true
 # Compact TeX distribution as alternative to the full TeX Live / MacTeX
 cask "basictex"
+# Client for the Dropbox cloud storage service
+cask "dropbox"
 # Clipboard manager for developers
 cask "flycut"
 # Nerd Font patched Hack — supplies the icon glyphs sketchybar renders
