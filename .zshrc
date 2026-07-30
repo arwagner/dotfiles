@@ -41,3 +41,5 @@ export NVM_DIR="$HOME/.nvm"
 export PATH="$PATH:/Users/andrew/.lmstudio/bin"
 # End of LM Studio CLI section
 
+export SKYLIGHT=$HOME/Dropbox/andrew/skylight
+export DTAK=$SKYLIGHT/code/dtak-prototype
