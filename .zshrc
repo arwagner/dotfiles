@@ -22,6 +22,11 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
 
+# tfenv keeps its downloaded terraform binaries in the same directory as its
+# config, and Homebrew's shims default that to ~/.config/tfenv — which is a
+# symlink into the dotfiles repo. Point it at the XDG data dir instead.
+export TFENV_CONFIG_DIR="$HOME/.local/share/tfenv"
+
 # if [ -f "$HOME/Dropbox/andrew/.env" ]; then
 #   set -a
 #  source "$HOME/Dropbox/andrew/.env"

@@ -54,6 +54,8 @@ brew "python@3.12"
 brew "rust"
 # Send macOS User Notifications from the command-line
 brew "terminal-notifier"
+# Terraform version manager inspired by rbenv — supplies the terraform shim
+brew "tfenv"
 # Extremely fast Python package installer and resolver, written in Rust
 brew "uv"
 # Graphical user interface for chess
