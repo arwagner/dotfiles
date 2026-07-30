@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+
+# Symlink this repo's config files into $HOME:
+#
+#   install              # link everything, backing up anything in the way
+#   install --dry-run    # report what would change and touch nothing
+#
+# The map below is the source of truth for what this repo installs. It is an
+# explicit list rather than "link every top-level file" because the mapping is
+# not uniform: .config is linked as a whole directory, claude/ is linked file by
+# file into ~/.claude (that directory is mostly runtime state — transcripts,
+# caches, plugin state — so it cannot be a symlink itself), and bin/, Brewfile
+# and raycast/ are used in place and never linked at all.
+#
+# Existing regular files are moved aside rather than overwritten, so a config
+# that drifted from the repo copy is preserved and reported instead of lost.
+
+set -euo pipefail
+
+# repo path : path under $HOME
+MAP=(
+  ".zshrc:.zshrc"
+  ".zshenv:.zshenv"
+  ".gitconfig:.gitconfig"
+  ".aerospace.toml:.aerospace.toml"
+  ".config:.config"
+  "claude/settings.json:.claude/settings.json"
+  "claude/CLAUDE.md:.claude/CLAUDE.md"
+)
+
+repo="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+
+dry_run=false
+case "${1:-}" in
+  -n | --dry-run) dry_run=true ;;
+  "") ;;
+  *)
+    echo "usage: install [--dry-run]" >&2
+    exit 64
+    ;;
+esac
+
+# .zshrc puts $HOME/dotfiles/bin on PATH and claude/settings.json invokes the
+# fleet scripts by their dotfiles/claude/... path, so those files only resolve
+# when the clone is at ~/dotfiles. Linking from anywhere else would appear to
+# work and then fail at runtime.
+if [ "$repo" != "$HOME/dotfiles" ]; then
+  echo "install: this repo expects to live at ~/dotfiles, not $repo" >&2
+  echo "install: .zshrc and claude/settings.json refer to that path directly" >&2
+  exit 1
+fi
+
+changed=0
+drifted=()
+
+run() {
+  if [ "$dry_run" = false ]; then
+    "$@"
+  fi
+}
+
+for entry in "${MAP[@]}"; do
+  src="$repo/${entry%%:*}"
+  dst="$HOME/${entry#*:}"
+  label="${entry#*:}"
+
+  if [ ! -e "$src" ]; then
+    echo "install: missing from repo: ${entry%%:*}" >&2
+    exit 1
+  fi
+
+  # An existing symlink is replaced outright; there is nothing in it to lose.
+  # -n matters here: without it, ln would follow a symlinked directory such as
+  # ~/.config and create the new link *inside* it.
+  if [ -L "$dst" ]; then
+    current="$(cd -- "$(dirname -- "$dst")" && readlink -- "$dst")"
+    case "$current" in
+      /*) resolved="$current" ;;
+      *) resolved="$(dirname -- "$dst")/$current" ;;
+    esac
+    if [ "$resolved" = "$src" ]; then
+      printf '  ok        %s\n' "$label"
+      continue
+    fi
+    printf '  relink    %s (was -> %s)\n' "$label" "$current"
+    run ln -sfn -- "$src" "$dst"
+    changed=$((changed + 1))
+    continue
+  fi
+
+  if [ -e "$dst" ]; then
+    if [ -f "$dst" ] && [ -f "$src" ] && cmp -s -- "$dst" "$src"; then
+      # Same content, so there is nothing worth keeping a copy of.
+      printf '  link      %s (replaced identical copy)\n' "$label"
+      run ln -sfn -- "$src" "$dst"
+      changed=$((changed + 1))
+      continue
+    fi
+    backup="$dst.pre-dotfiles.$(date +%Y%m%d%H%M%S)"
+    printf '  BACKUP    %s differs from the repo -> %s\n' "$label" "$(basename -- "$backup")"
+    drifted+=("$label")
+    run mv -- "$dst" "$backup"
+    run ln -sfn -- "$src" "$dst"
+    changed=$((changed + 1))
+    continue
+  fi
+
+  printf '  link      %s\n' "$label"
+  run mkdir -p -- "$(dirname -- "$dst")"
+  run ln -sfn -- "$src" "$dst"
+  changed=$((changed + 1))
+done
+
+if [ "$dry_run" = true ]; then
+  printf '\n%s change(s) to make; nothing written.\n' "$changed"
+  exit 0
+fi
+
+printf '\n%s change(s) made.\n' "$changed"
+
+if [ ${#drifted[@]} -gt 0 ]; then
+  printf '\nThese had their own version, kept as *.pre-dotfiles.*:\n'
+  for label in "${drifted[@]}"; do
+    printf '  %s\n' "$label"
+  done
+  printf 'Diff each one and fold anything worth keeping into the repo.\n'
+fi
+
+cat <<'NEXT'
+
+Not handled here — the rest of a new machine:
+  brew bundle --file ~/dotfiles/Brewfile   install the packages
+  tfenv install && tfenv use <version>     terraform, into ~/.local/share/tfenv
+  Raycast > Extensions > Script Commands   add ~/dotfiles/raycast
+  exec zsh                                 pick up .zshenv and .zshrc
+NEXT
