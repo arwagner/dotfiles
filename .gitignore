@@ -2,5 +2,9 @@
 # Machine-local build output, not configuration.
 .config/raycast/
 
+# tfenv downloads an ~85MB terraform binary per version here. The pinned
+# version in .config/tfenv/version is config; the binaries are not.
+.config/tfenv/versions/
+
 # Byte-compiled plugin helpers
 __pycache__/
