@@ -1,0 +1,38 @@
+{
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+    "security.workspace.trust.untrustedFiles": "open",
+    "security.promptForLocalFileProtocolHandling": false,
+    "liveServer.settings.donotShowInfoMsg": true,
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "chat.agent.maxRequests": 50,
+    "cSpell.enabled": false,
+    "chat.tools.terminal.autoApprove": {
+        "npm run test:coverage": true,
+        "npm test": true,
+        "npm run analyze": true,
+        "npx": true,
+        "npm list": true,
+        "npm install": true,
+        "npm run build": true,
+        "node ./dist/paradise-cli.js --help": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npm run build && node debug-display.js": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npm run dev": true
+    },
+    "extensions.ignoreRecommendations": true,
+    "workbench.colorTheme": "Dark+",
+    "claudeCode.preferredLocation": "panel",
+    "js/ts.updateImportsOnFileMove.enabled": "always",
+    "editor.accessibilitySupport": "off",
+    "chat.viewSessions.orientation": "stacked",
+    "terminal.integrated.mouseWheelScrollSensitivity": 3,
+    "update.showReleaseNotes": false,
+    "dart.flutterSdkPath": "/Users/andrew/Downloads/flutter",
+    "terminal.integrated.gpuAcceleration": "off"
+}

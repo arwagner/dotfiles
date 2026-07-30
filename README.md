@@ -41,11 +41,20 @@ uniform:
 | `.config` | `~/.config` | whole directory — sketchybar, gh, ccstatusline |
 | `claude/settings.json` | `~/.claude/settings.json` | hooks that drive the fleet scripts |
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | global instructions |
+| `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | |
+| `vscode/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` | |
 
 `~/.claude` is linked file by file instead of as a directory because it is mostly
 runtime state — prompt history, conversation transcripts, caches, plugin state —
 none of which belongs in a public repo. That is also why the sources sit in an
 undotted `claude/` rather than a `.claude/` that could be linked wholesale.
+
+VS Code's user directory is file by file for the same reason, and more so: beside
+those two files it holds ~2GB of `workspaceStorage`, `History` and
+`globalStorage`. VS Code extensions are not linked at all — the Brewfile's
+`vscode "..."` lines install them, so `brew bundle` restores the set. Settings
+Sync should stay off; it rewrites `settings.json` itself and would fight the
+symlink.
 
 Anything already in the way is moved to `*.pre-dotfiles.<timestamp>` rather than
 overwritten, and named in the summary. An identical copy is replaced without a
