@@ -29,10 +29,14 @@ GLYPH_WORKING="$(printf '\357\200\223')"     # U+F013 nf-fa-gear
 GLYPH_IDLE="$(printf '\357\211\222')"        # U+F252 nf-fa-hourglass_half
 GLYPH_PERMISSION="$(printf '\357\200\243')"  # U+F023 nf-fa-lock
 
-COLOR_DEFAULT=0xffffffff
-COLOR_WORKING=0xff7aa2f7
-COLOR_IDLE=0xffe6b450
-COLOR_PERMISSION=0xffff5f5f
+# Read against the bar (0xff1a1b26) and, for the focused workspace, against its
+# pill (0xff2f3549) — the darker of the two backgrounds is the bar, but the pill
+# is the tighter constraint. All four clear 4.5:1 on both. The red was 0xffff5f5f
+# and only managed 4.2:1 on the pill once the bar stopped being translucent.
+COLOR_DEFAULT=0xffffffff      # 17.1:1 on the bar, 12.4:1 on the pill
+COLOR_WORKING=0xff7aa2f7      #  6.8:1 on the bar,  4.9:1 on the pill
+COLOR_IDLE=0xffe6b450         #  9.0:1 on the bar,  6.5:1 on the pill
+COLOR_PERMISSION=0xffff7b72   #  6.8:1 on the bar,  4.9:1 on the pill
 
 focused="${FOCUSED_WORKSPACE:-$(aerospace list-workspaces --focused)}"
 occupied="$(aerospace list-workspaces --monitor all --empty no)"

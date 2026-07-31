@@ -14,7 +14,11 @@ PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
 # If you are looking for other colors, see the color picker:
 # https://felixkratz.github.io/SketchyBar/config/tricks#color-picker
 
-sketchybar --bar position=top height=40 blur_radius=30 color=0x40000000
+# Opaque, so the bar reads the same over a bright window as over a dark one and
+# every foreground colour below has one known background to contrast against.
+# blur_radius is gone with the translucency: it only ever blurred what showed
+# through.
+sketchybar --bar position=top height=40 color=0xff1a1b26
 
 ##### Changing Defaults #####
 # We now change some default values, which are applied to all further items.
@@ -50,7 +54,12 @@ workspace=(
   padding_right=16
   icon.padding_left=7
   icon.padding_right=4
-  background.color=0x40ffffff
+  # The focused workspace's pill. Only a little lighter than the bar on
+  # purpose: the indicator's text is drawn in the status colours from
+  # aerospace.sh, and a brighter pill would eat their contrast. This keeps the
+  # worst of them (red, at 4.9:1) above the 4.5:1 readable threshold while
+  # still separating the pill from the bar.
+  background.color=0xff2f3549
   background.corner_radius=5
   background.height=25
   background.drawing=off

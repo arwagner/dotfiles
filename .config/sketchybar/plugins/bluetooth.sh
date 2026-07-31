@@ -43,8 +43,11 @@ for entry in data.get("SPBluetoothDataType", []):
 print("off")
 ')"
 
+# The off state is dimmed, but to a solid colour rather than to half-alpha
+# white: 6.4:1 against the bar, so it still reads as an icon and not as a smudge,
+# while sitting far enough below the on state's 17:1 to be legible as "off".
 if [ "$state" = "on" ]; then
   sketchybar --set "$NAME" icon="$ICON_ON" icon.color=0xffffffff
 else
-  sketchybar --set "$NAME" icon="$ICON_OFF" icon.color=0x80ffffff
+  sketchybar --set "$NAME" icon="$ICON_OFF" icon.color=0xff8f97b8
 fi
