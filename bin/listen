@@ -1,0 +1,258 @@
+#!/usr/bin/env bash
+
+# Speak the newest transcript that claude/listen.sh recorded.
+#
+#   listen          # the last turn of the newest session file
+#   listen -a       # the whole session file, start to finish
+#   listen -p       # print the path instead of playing it
+#   listen -b       # start speaking and return, rather than blocking
+#   listen -s       # stop whatever is currently speaking
+#
+# listen.sh writes one file per Claude session into ~/.claude/listen, so the
+# newest by mtime is the session you were last working in, and it is still being
+# appended to while that session is live. The default is therefore the turn
+# Claude has just finished -- which is what you almost always want, and is also
+# the cheap case. See below.
+#
+# The voice is the Speechify TTS API: the text is posted to /v1/audio/speech,
+# which returns base64 mp3, and afplay plays it. That is billed per character,
+# so synthesis is cached under a hash of the exact text and voice -- replaying
+# an unchanged turn costs nothing and starts instantly. `listen -a` re-speaks
+# every turn in the file, which is the expensive direction.
+#
+# The API caps input at 2000 characters and a normal turn runs past that often
+# enough to matter, so the text is split on sentence boundaries, each piece is
+# synthesised separately, and the pieces are stitched back into one mp3.
+#
+# If SPEECHIFY_API_KEY is missing or the call fails, this falls back to macOS
+# `say`, so a dead network still gets you the turn. Ctrl-C stops playback.
+
+set -euo pipefail
+
+DIR="$HOME/.claude/listen"
+CACHE="$DIR/.cache"
+KEEP_DAYS=7
+
+API="https://api.speechify.ai/v1/audio/speech"
+VOICE="${LISTEN_VOICE:-geffen_32}"   # a Speechify voice id, not a `say` voice
+SPEED="${LISTEN_SPEED:-1.0}"         # afplay rate multiplier; 1.0 is the voice's own pace
+MAX_CHARS=2000                       # the API's documented per-request input cap
+TIMEOUT=120
+
+SAY_RATE="${LISTEN_SAY_RATE:-190}"   # fallback path only: words per minute
+SAY_VOICE="${LISTEN_SAY_VOICE:-}"    # fallback path only: a `say` voice name
+
+mode=play
+scope=last
+background=false
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -a|--all)         scope=all ;;
+    -l|--last)        scope=last ;;          # kept: the old name for today's default
+    -p|--path)        mode=path ;;
+    -b|--background)  background=true ;;
+    -s|--stop)        mode=stop ;;
+    -h|--help)        sed -n '3,29p' "$0" | cut -c3-; exit 0 ;;
+    *)                echo "listen: unknown option: $1" >&2; exit 64 ;;
+  esac
+  shift
+done
+
+# Nothing else on this machine plays through afplay or speaks through say, so
+# killing every instance is the whole of "stop". pkill exits 1 when it matched
+# nothing, which is not a failure here.
+if [ "$mode" = stop ]; then
+  killed=false
+  pkill -x afplay 2>/dev/null && killed=true || true
+  pkill -x say 2>/dev/null && killed=true || true
+  if [ "$killed" = true ]; then echo "listen: stopped"; else echo "listen: nothing playing"; fi
+  exit 0
+fi
+
+# -t sorts by mtime, newest first. The nullglob check keeps an empty directory
+# from turning into a literal '*.txt' argument.
+shopt -s nullglob
+files=("$DIR"/*.txt)
+shopt -u nullglob
+if [ ${#files[@]} -eq 0 ]; then
+  echo "listen: nothing recorded in $DIR" >&2
+  exit 1
+fi
+newest=$(ls -t "$DIR"/*.txt | head -1)
+
+if [ "$mode" = path ]; then
+  printf '%s\n' "$newest"
+  exit 0
+fi
+
+# listen.sh separates turns with a "Turn at 2:07 PM." heading, so the last turn
+# is everything from the final such line onwards.
+if [ "$scope" = last ]; then
+  text=$(awk '/^Turn at /{buf=""} {buf = buf $0 "\n"} END{printf "%s", buf}' "$newest")
+else
+  text=$(cat "$newest")
+fi
+
+[ -n "$text" ] || { echo "listen: $newest is empty" >&2; exit 1; }
+
+# Only ever one thing speaking: a second listen replaces the first rather than
+# talking over it.
+pkill -x afplay 2>/dev/null || true
+pkill -x say 2>/dev/null || true
+
+if [ "$scope" = all ]; then
+  label="$(basename "$newest") (whole session)"
+else
+  label="$(basename "$newest") (last turn)"
+fi
+
+# ------------------------------------------------------------------- fallback
+
+speak_with_say() {
+  local args=(-r "$SAY_RATE") words mins
+  [ -n "$SAY_VOICE" ] && args+=(-v "$SAY_VOICE")
+  words=$(printf '%s' "$text" | wc -w | tr -d ' ')
+  mins=$(( (words + SAY_RATE - 1) / SAY_RATE ))
+  printf 'listen: %s, about %d min, macOS say\n' "$label" "$mins" >&2
+  if [ "$background" = true ]; then
+    printf '%s' "$text" | nohup say "${args[@]}" >/dev/null 2>&1 &
+    disown 2>/dev/null || true
+  else
+    printf '%s' "$text" | say "${args[@]}"
+  fi
+}
+
+# ------------------------------------------------------------------ speechify
+
+# Keyed on the voice as well as the text: switching voices must not replay the
+# previous one out of the cache.
+mkdir -p "$CACHE"
+key=$(printf '%s\n%s' "$VOICE" "$text" | md5 -q)
+mp3="$CACHE/$key.mp3"
+
+if [ -z "${SPEECHIFY_API_KEY:-}" ]; then
+  echo "listen: SPEECHIFY_API_KEY is not set, falling back to say" >&2
+  speak_with_say
+  exit 0
+fi
+
+if [ ! -s "$mp3" ]; then
+  work=$(mktemp -d "${TMPDIR:-/tmp}/listen-tts.XXXXXX")
+  trap 'rm -rf "$work"' EXIT
+
+  # Pack whole sentences into pieces of at most MAX_CHARS. Splitting mid-sentence
+  # is audible -- the voice drops its pitch at the cut and starts the next piece
+  # cold -- so that only happens for a single sentence longer than the whole cap,
+  # which prose written to be heard does not contain.
+  # Sentences are peeled off the front with match/substr rather than marked with
+  # a delimiter and split. split() turns its separator into a regex, and macOS
+  # awk mangles a "\001" marker badly enough that it also splits on newlines,
+  # silently eating every paragraph break.
+  printf '%s' "$text" | awk -v dir="$work" -v max="$MAX_CHARS" '
+    { full = full $0 "\n" }
+    END {
+      buf = ""; idx = 0
+      while (length(full) > 0) {
+        if (match(full, /[.!?][ \n]+/)) {
+          sent = substr(full, 1, RSTART + RLENGTH - 1)
+          full = substr(full, RSTART + RLENGTH)
+        } else { sent = full; full = "" }
+        while (length(sent) > max) {
+          if (length(buf) > 0) { emit(buf); buf = "" }
+          emit(substr(sent, 1, max)); sent = substr(sent, max + 1)
+        }
+        if (length(buf) + length(sent) > max && length(buf) > 0) { emit(buf); buf = "" }
+        buf = buf sent
+      }
+      if (length(buf) > 0) emit(buf)
+    }
+    function emit(s,   out) {
+      out = sprintf("%s/%03d.txt", dir, idx); printf "%s", s > out; close(out); idx++
+    }'
+
+  shopt -s nullglob
+  chunks=("$work"/*.txt)
+  shopt -u nullglob
+  if [ ${#chunks[@]} -eq 0 ]; then
+    echo "listen: nothing to synthesise, falling back to say" >&2
+    speak_with_say
+    exit 0
+  fi
+
+  billed_total=0
+  for chunk in "${chunks[@]}"; do
+    ctext=$(cat "$chunk")
+    body=$(jq -n --arg input "$ctext" --arg voice "$VOICE" \
+      '{input: $input, voice_id: $voice, audio_format: "mp3"}')
+    resp="$chunk.json"
+
+    http=$(curl -sS -X POST "$API" \
+      --max-time "$TIMEOUT" \
+      -H "Authorization: Bearer $SPEECHIFY_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d "$body" \
+      -o "$resp" -w '%{http_code}' 2>/dev/null) || http=000
+
+    if [ "$http" != "200" ]; then
+      # The error body is small and says why -- a bad key and an empty balance
+      # are very different problems, and guessing between them wastes your time.
+      detail=$(jq -r '.error.message // .message // empty' "$resp" 2>/dev/null | tr -d '\n' | head -c 200)
+      echo "listen: speechify returned ${http}${detail:+: $detail}, falling back to say" >&2
+      speak_with_say
+      exit 0
+    fi
+
+    if ! jq -r '.audio_data // empty' "$resp" | base64 -D > "${chunk%.txt}.mp3" 2>/dev/null \
+       || [ ! -s "${chunk%.txt}.mp3" ]; then
+      echo "listen: speechify returned no audio, falling back to say" >&2
+      speak_with_say
+      exit 0
+    fi
+
+    billed=$(jq -r '.billable_characters_count // 0' "$resp" 2>/dev/null)
+    billed_total=$((billed_total + billed))
+  done
+
+  # Stitch the pieces. ffmpeg's concat demuxer joins the mp3 frames properly;
+  # a plain cat mostly works on same-encoder streams and is the fallback so this
+  # does not hard-depend on ffmpeg being installed.
+  parts=("$work"/*.mp3)
+  if [ ${#parts[@]} -eq 1 ]; then
+    mv "${parts[0]}" "$mp3.part"
+  elif command -v ffmpeg >/dev/null 2>&1; then
+    for p in "${parts[@]}"; do printf "file '%s'\n" "$p"; done > "$work/concat.txt"
+    # -f mp3 is required because ffmpeg picks its muxer from the extension and
+    # the target is still called .part here. If it fails anyway, fall through to
+    # cat rather than abort -- the chunks are already paid for.
+    ffmpeg -v error -f concat -safe 0 -i "$work/concat.txt" -c copy -f mp3 "$mp3.part" \
+      || cat "${parts[@]}" > "$mp3.part"
+  else
+    cat "${parts[@]}" > "$mp3.part"
+  fi
+
+  # Move into place only once complete, so an interrupted run never leaves a
+  # truncated mp3 in the cache under a hash that claims it is whole.
+  mv "$mp3.part" "$mp3"
+  printf 'listen: synthesised %s characters in %d request(s)\n' "$billed_total" "${#chunks[@]}" >&2
+fi
+
+# afinfo knows the real duration, which beats estimating from a word count.
+secs=$(afinfo "$mp3" 2>/dev/null | awk '/estimated duration/{printf "%d", $3}')
+if [ -n "${secs:-}" ] && [ "$secs" -gt 0 ]; then
+  printf 'listen: %s, %d:%02d, voice %s\n' "$label" $((secs / 60)) $((secs % 60)) "$VOICE" >&2
+else
+  printf 'listen: %s, voice %s\n' "$label" "$VOICE" >&2
+fi
+
+# Cached audio is a byproduct of listening, not a record of it. Reap it on the
+# same seven-day clock listen.sh uses for the transcripts themselves.
+find "$CACHE" -maxdepth 1 -type f -name '*.mp3' -mtime "+$KEEP_DAYS" -delete 2>/dev/null || true
+
+if [ "$background" = true ]; then
+  # nohup so playback outlives the shell that a slash command runs in.
+  nohup afplay -r "$SPEED" "$mp3" >/dev/null 2>&1 &
+  disown 2>/dev/null || true
+else
+  afplay -r "$SPEED" "$mp3"
+fi

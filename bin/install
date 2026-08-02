@@ -26,6 +26,7 @@ MAP=(
   ".config:.config"
   "claude/settings.json:.claude/settings.json"
   "claude/CLAUDE.md:.claude/CLAUDE.md"
+  "claude/commands:.claude/commands"
   "vscode/settings.json:Library/Application Support/Code/User/settings.json"
   "vscode/keybindings.json:Library/Application Support/Code/User/keybindings.json"
 )
