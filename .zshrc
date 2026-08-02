@@ -22,12 +22,6 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
 
-# if [ -f "$HOME/Dropbox/andrew/.env" ]; then
-#   set -a
-#  source "$HOME/Dropbox/andrew/.env"
-#  set +a
-#fi
-
 # `claude`    -> your Claude subscription (no env overrides)
 # `claude-or` -> route this invocation through OpenRouter
 # claude-or() {
