@@ -1,0 +1,11 @@
+{
+  "todo": {
+    "command": "ssh",
+    "args": [
+      "-o",
+      "BatchMode=yes",
+      "root@187.124.159.132",
+      "runuser -u todo -- env TODO_DB=/var/lib/todo/todo.db TODO_TOKEN=${TODO_API_KEY} /opt/node24/bin/node --disable-warning=ExperimentalWarning /opt/todo/current/src/adapters/mcp/main.ts"
+    ]
+  }
+}

@@ -114,6 +114,57 @@ for entry in "${MAP[@]}"; do
   changed=$((changed + 1))
 done
 
+# MCP servers are user scope, which means ~/.claude.json. That file is not a
+# symlink candidate for the same reason ~/.claude is not. Claude Code rewrites it
+# constantly with session state: prompt history, the OAuth account, and cached
+# feature flags, none of which belongs in a public repo. So the definitions are
+# tracked in claude/mcp-servers.json and replayed through the CLI instead.
+#
+# Claude Code expands a ${VAR} in a server's argv when it starts that server, so
+# tokens stay in the Dropbox env file .zshenv sources and reach neither JSON
+# file. A server whose ${VAR} is unset fails at connect time, not here.
+mcp_src="$repo/claude/mcp-servers.json"
+
+if [ -f "$mcp_src" ] && command -v claude >/dev/null 2>&1; then
+  printf '\nMCP servers -> ~/.claude.json (user scope):\n'
+
+  # Emits one "name<TAB>ok|set<TAB>definition" line per tracked server. The repo
+  # file is a bare name:definition map. ~/.claude.json nests the same map under
+  # mcpServers. This adds and updates only, so untracked servers stay untouched.
+  while IFS=$'\t' read -r name state want; do
+    if [ "$state" = ok ]; then
+      printf '  ok        %s\n' "$name"
+      continue
+    fi
+    printf '  register  %s\n' "$name"
+    # add-json refuses to overwrite, so an existing definition is removed first.
+    # Both calls are quiet: the loop above already reported what is happening.
+    if [ "$dry_run" = false ]; then
+      claude mcp remove -s user -- "$name" >/dev/null 2>&1 || true
+      claude mcp add-json -s user -- "$name" "$want" >/dev/null
+    fi
+    changed=$((changed + 1))
+  done < <(python3 - "$mcp_src" "$HOME/.claude.json" <<'PY'
+import json, os, sys
+
+
+def servers(path):
+    if not os.path.exists(path):
+        return {}
+    doc = json.load(open(path))
+    return doc.get("mcpServers", doc)
+
+
+tracked = servers(sys.argv[1])
+installed = servers(sys.argv[2])
+
+for name, want in tracked.items():
+    state = "ok" if installed.get(name) == want else "set"
+    print("\t".join([name, state, json.dumps(want, sort_keys=True)]))
+PY
+  )
+fi
+
 if [ "$dry_run" = true ]; then
   printf '\n%s change(s) to make; nothing written.\n' "$changed"
   exit 0

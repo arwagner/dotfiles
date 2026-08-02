@@ -56,6 +56,21 @@ those two files it holds ~2GB of `workspaceStorage`, `History` and
 Sync should stay off; it rewrites `settings.json` itself and would fight the
 symlink.
 
+## MCP servers
+
+`claude/mcp-servers.json` holds the global MCP servers, and `bin/install`
+registers each one with `claude mcp add-json -s user`. They are not linked.
+User-scope servers live in `~/.claude.json`, which Claude Code rewrites
+constantly with prompt history, the OAuth account and cached feature flags. That
+file can be neither a symlink nor a public repo file. The install step adds and
+updates only, so a server that is not in the repo file stays untouched.
+
+Keep tokens out of both files. Claude Code expands `${VAR}` in a server's argv
+when it starts that server. So a secret is written as `${TODO_API_KEY}` here and
+its value lives in the Dropbox env file `.zshenv` sources. A server whose
+variable is unset fails when it connects, not during install, and `claude mcp
+list` reports which one.
+
 Anything already in the way is moved to `*.pre-dotfiles.<timestamp>` rather than
 overwritten, and named in the summary. An identical copy is replaced without a
 backup, since there'd be nothing in it to keep.
