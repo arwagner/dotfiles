@@ -40,6 +40,11 @@
             "type": "command",
             "command": "bash \"/Users/andrew/dotfiles/claude/fleet-mark.sh\" idle",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash \"/Users/andrew/dotfiles/claude/listen.sh\"",
+            "timeout": 5
           }
         ]
       }
