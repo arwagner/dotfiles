@@ -10,6 +10,13 @@
 # Terminal shows the tab's dir first, e.g. "skylight — claude ..."). Distinct
 # project dirs map cleanly; two sessions in the same dir are ambiguous.
 set -o pipefail
+
+# AeroSpace and Hammerspoon both start us with a bare PATH that has no Homebrew
+# in it, and both `aerospace` and `jq` live there. Their failures below are sent
+# to /dev/null, so without this the script reports "no matching Terminal
+# windows" instead of reporting an error, which is the worst way to be wrong.
+PATH="/opt/homebrew/bin:$PATH"
+
 dir="/tmp/claude-waiting"
 mode="${1:-list}"
 
