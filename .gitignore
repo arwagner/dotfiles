@@ -4,3 +4,7 @@
 
 # Byte-compiled plugin helpers
 __pycache__/
+
+# Karabiner snapshots karabiner.json here every time you touch its settings.
+# The current config is tracked; its history belongs to git, not to a folder.
+.config/karabiner/automatic_backups/

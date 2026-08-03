@@ -82,6 +82,11 @@ cask "flycut"
 cask "font-hack-nerd-font"
 # App icons as ligatures, for the per-workspace app indicators
 cask "font-sketchybar-app-font"
+# Desktop automation. Hosts the Hammerflow spoon, which draws the leader tree
+cask "hammerspoon"
+# Keyboard customiser. Makes Caps Lock the leader key and squares up the
+# modifier positions between the built-in and USB keyboards
+cask "karabiner-elements"
 # Control your tools with a few keystrokes
 cask "raycast"
 # System monitor for the menu bar
