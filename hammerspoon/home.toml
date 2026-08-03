@@ -1,0 +1,160 @@
+# The leader tree. Caps Lock opens it, then you spell out what you want:
+# noun, then verb, then object.
+#
+#   CapsLock Space g d   ->  workspace, go, D
+#   CapsLock w m l       ->  window, move, right
+#   CapsLock c s         ->  claude, status
+#
+# Two rules make the tree predictable, so you compose a path instead of
+# recalling one:
+#
+#   1. i j k l always mean up, left, down, right. At every level, no exceptions.
+#      That is why "join" is g for group and "jump" is n for next. Those four
+#      letters are spent. The same rule already applies in .aerospace.toml,
+#      which is why no workspace is named H, I, J, K or L.
+#
+#   2. Each noun owns its own verbs. s is "send" under workspace and "status"
+#      under claude. There is no ambiguity, because you name the noun first.
+#
+# This is the slow, certain route. Frequent actions here also have an alt chord
+# in .aerospace.toml. Chords are for speed. The tree is for when you want to be
+# sure, or when something else has your attention. Escape backs out of a level.
+#
+# Hammerflow runs cmd: through /bin/sh, which starts with a bare PATH. So every
+# path here is absolute, and listen runs under zsh because it needs the
+# SPEECHIFY_API_KEY that .zshenv exports.
+
+leader_key = "f18"
+auto_reload = true
+show_ui = true
+key_maps_per_line = 6
+
+# --------------------------------------------------------------- workspace
+[space]
+label = "workspace"
+space = ["raycast://extensions/limonkufu/aerospace/switchApps", "search windows"]
+b = ["cmd:/opt/homebrew/bin/aerospace workspace-back-and-forth", "back and forth"]
+f = ["cmd:/opt/homebrew/bin/aerospace flatten-workspace-tree", "flatten tree"]
+r = ['input:cmd:$HOME/dotfiles/bin/rename-workspace "$(/opt/homebrew/bin/aerospace list-workspaces --focused)" "{input}"', "rename"]
+
+[space.g]
+label = "go to"
+1 = ["cmd:/opt/homebrew/bin/aerospace workspace 1", "1"]
+2 = ["cmd:/opt/homebrew/bin/aerospace workspace 2", "2"]
+3 = ["cmd:/opt/homebrew/bin/aerospace workspace 3", "3"]
+4 = ["cmd:/opt/homebrew/bin/aerospace workspace 4", "4"]
+5 = ["cmd:/opt/homebrew/bin/aerospace workspace 5", "5"]
+6 = ["cmd:/opt/homebrew/bin/aerospace workspace 6", "6"]
+7 = ["cmd:/opt/homebrew/bin/aerospace workspace 7", "7"]
+8 = ["cmd:/opt/homebrew/bin/aerospace workspace 8", "8"]
+9 = ["cmd:/opt/homebrew/bin/aerospace workspace 9", "9"]
+a = ["cmd:/opt/homebrew/bin/aerospace workspace A", "A"]
+b = ["cmd:/opt/homebrew/bin/aerospace workspace B", "B"]
+c = ["cmd:/opt/homebrew/bin/aerospace workspace C", "C"]
+d = ["cmd:/opt/homebrew/bin/aerospace workspace D", "D"]
+e = ["cmd:/opt/homebrew/bin/aerospace workspace E", "E"]
+f = ["cmd:/opt/homebrew/bin/aerospace workspace F", "F"]
+g = ["cmd:/opt/homebrew/bin/aerospace workspace G", "G"]
+m = ["cmd:/opt/homebrew/bin/aerospace workspace M", "M"]
+n = ["cmd:/opt/homebrew/bin/aerospace workspace N", "N"]
+o = ["cmd:/opt/homebrew/bin/aerospace workspace O", "O"]
+p = ["cmd:/opt/homebrew/bin/aerospace workspace P", "P"]
+q = ["cmd:/opt/homebrew/bin/aerospace workspace Q", "Q"]
+r = ["cmd:/opt/homebrew/bin/aerospace workspace R", "R"]
+s = ["cmd:/opt/homebrew/bin/aerospace workspace S", "S"]
+t = ["cmd:/opt/homebrew/bin/aerospace workspace T", "T"]
+u = ["cmd:/opt/homebrew/bin/aerospace workspace U", "U"]
+v = ["cmd:/opt/homebrew/bin/aerospace workspace V", "V"]
+w = ["cmd:/opt/homebrew/bin/aerospace workspace W", "W"]
+x = ["cmd:/opt/homebrew/bin/aerospace workspace X", "X"]
+y = ["cmd:/opt/homebrew/bin/aerospace workspace Y", "Y"]
+z = ["cmd:/opt/homebrew/bin/aerospace workspace Z", "Z"]
+
+[space.m]
+label = "to monitor"
+j = ["cmd:/opt/homebrew/bin/aerospace move-workspace-to-monitor --wrap-around prev", "prev"]
+l = ["cmd:/opt/homebrew/bin/aerospace move-workspace-to-monitor --wrap-around next", "next"]
+
+[space.s]
+label = "send window to"
+1 = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window 1", "1"]
+2 = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window 2", "2"]
+3 = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window 3", "3"]
+4 = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window 4", "4"]
+5 = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window 5", "5"]
+6 = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window 6", "6"]
+7 = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window 7", "7"]
+8 = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window 8", "8"]
+9 = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window 9", "9"]
+a = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window A", "A"]
+b = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window B", "B"]
+c = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window C", "C"]
+d = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window D", "D"]
+e = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window E", "E"]
+f = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window F", "F"]
+g = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window G", "G"]
+m = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window M", "M"]
+n = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window N", "N"]
+o = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window O", "O"]
+p = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window P", "P"]
+q = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window Q", "Q"]
+r = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window R", "R"]
+s = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window S", "S"]
+t = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window T", "T"]
+u = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window U", "U"]
+v = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window V", "V"]
+w = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window W", "W"]
+x = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window X", "X"]
+y = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window Y", "Y"]
+z = ["cmd:/opt/homebrew/bin/aerospace move-node-to-workspace --focus-follows-window Z", "Z"]
+
+# ------------------------------------------------------------------ window
+[w]
+label = "window"
+
+[w.f]
+label = "focus"
+i = ["cmd:/opt/homebrew/bin/aerospace focus up", "up"]
+j = ["cmd:/opt/homebrew/bin/aerospace focus left", "left"]
+k = ["cmd:/opt/homebrew/bin/aerospace focus down", "down"]
+l = ["cmd:/opt/homebrew/bin/aerospace focus right", "right"]
+
+[w.m]
+label = "move"
+i = ["cmd:/opt/homebrew/bin/aerospace move up", "up"]
+j = ["cmd:/opt/homebrew/bin/aerospace move left", "left"]
+k = ["cmd:/opt/homebrew/bin/aerospace move down", "down"]
+l = ["cmd:/opt/homebrew/bin/aerospace move right", "right"]
+
+[w.g]
+label = "group with"
+i = ["cmd:/opt/homebrew/bin/aerospace join-with up", "up"]
+j = ["cmd:/opt/homebrew/bin/aerospace join-with left", "left"]
+k = ["cmd:/opt/homebrew/bin/aerospace join-with down", "down"]
+l = ["cmd:/opt/homebrew/bin/aerospace join-with right", "right"]
+
+[w.r]
+label = "resize"
+b = ["cmd:/opt/homebrew/bin/aerospace resize smart +50", "bigger"]
+s = ["cmd:/opt/homebrew/bin/aerospace resize smart -50", "smaller"]
+
+[w.a]
+label = "arrange"
+t = ["cmd:/opt/homebrew/bin/aerospace layout tiles horizontal vertical", "tiles"]
+a = ["cmd:/opt/homebrew/bin/aerospace layout accordion horizontal vertical", "accordion"]
+f = ["cmd:/opt/homebrew/bin/aerospace layout floating tiling", "floating"]
+
+# ------------------------------------------------------------------ claude
+[c]
+label = "claude"
+s = ["cmd:$HOME/dotfiles/claude/fleet-status.sh list", "fleet status"]
+n = ["cmd:$HOME/dotfiles/claude/fleet-status.sh jump", "next waiting"]
+p = ['cmd:/bin/zsh -c "$HOME/dotfiles/bin/listen -b"', "play last turn"]
+e = ['cmd:/bin/zsh -c "$HOME/dotfiles/bin/listen -a -b"', "play whole session"]
+x = ['cmd:/bin/zsh -c "$HOME/dotfiles/bin/listen -s"', "stop playing"]
+
+# ------------------------------------------------------------------ system
+[s]
+label = "system"
+a = ["cmd:/opt/homebrew/bin/aerospace reload-config", "reload aerospace"]
+h = ["reload", "reload hammerspoon"]

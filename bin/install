@@ -9,8 +9,12 @@
 # explicit list rather than "link every top-level file" because the mapping is
 # not uniform: .config is linked as a whole directory, claude/ is linked file by
 # file into ~/.claude (that directory is mostly runtime state — transcripts,
-# caches, plugin state — so it cannot be a symlink itself), and bin/, Brewfile
-# and raycast/ are used in place and never linked at all.
+# caches, plugin state — so it cannot be a symlink itself), and bin/ and
+# Brewfile are used in place and never linked at all.
+#
+# ~/.hammerspoon is file by file for the same reason as ~/.claude: Hammerspoon
+# keeps its console history there, and bin/install clones the Hammerflow spoon
+# into it further down.
 #
 # Existing regular files are moved aside rather than overwritten, so a config
 # that drifted from the repo copy is preserved and reported instead of lost.
@@ -27,6 +31,8 @@ MAP=(
   "claude/settings.json:.claude/settings.json"
   "claude/CLAUDE.md:.claude/CLAUDE.md"
   "claude/commands:.claude/commands"
+  "hammerspoon/init.lua:.hammerspoon/init.lua"
+  "hammerspoon/home.toml:.hammerspoon/home.toml"
   "vscode/settings.json:Library/Application Support/Code/User/settings.json"
   "vscode/keybindings.json:Library/Application Support/Code/User/keybindings.json"
 )
@@ -114,6 +120,26 @@ for entry in "${MAP[@]}"; do
   changed=$((changed + 1))
 done
 
+# Hammerflow is the spoon that turns hammerspoon/home.toml into the leader tree.
+# It is not tracked in this repo. It is someone else's code, Hammerspoon expects
+# it unpacked under ~/.hammerspoon/Spoons, and it publishes no tagged releases,
+# so there is no version to pin to. This clones it and then pulls it, which
+# means it tracks upstream main. If the leader key behaves differently one
+# morning, that repo's recent commits are the first place to look.
+spoon_dir="$HOME/.hammerspoon/Spoons/Hammerflow.spoon"
+
+printf '\nHammerflow -> ~/.hammerspoon/Spoons:\n'
+if [ -d "$spoon_dir/.git" ]; then
+  printf '  ok        Hammerflow.spoon (pulling)\n'
+  run git -C "$spoon_dir" pull --quiet --ff-only
+else
+  printf '  clone     Hammerflow.spoon\n'
+  run mkdir -p -- "$(dirname -- "$spoon_dir")"
+  run git clone --quiet -- \
+    https://github.com/saml-dev/Hammerflow.spoon.git "$spoon_dir"
+  changed=$((changed + 1))
+fi
+
 # MCP servers are user scope, which means ~/.claude.json. That file is not a
 # symlink candidate for the same reason ~/.claude is not. Claude Code rewrites it
 # constantly with session state: prompt history, the OAuth account, and cached
@@ -185,6 +211,11 @@ cat <<'NEXT'
 Not handled here — the rest of a new machine:
   brew bundle --file ~/dotfiles/Brewfile   install the packages
   tfenv install && tfenv use <version>     terraform, into ~/.local/share/tfenv
-  Raycast > Extensions > Script Commands   add ~/dotfiles/raycast
   exec zsh                                 pick up .zshenv and .zshrc
+
+Permissions macOS only grants by hand:
+  Karabiner-Elements                       approve its driver extension, then
+                                           grant Input Monitoring
+  Hammerspoon                              grant Accessibility, then enable
+                                           "Launch at login" in its preferences
 NEXT
