@@ -20,8 +20,12 @@ tfenv install && tfenv use <version>
 exec zsh
 ```
 
-Then add `~/dotfiles/raycast` under Raycast > Extensions > Script Commands, and
-start AeroSpace, which starts sketchybar in turn.
+Then start AeroSpace, which starts sketchybar in turn.
+
+Two apps need permissions macOS only grants by hand. Karabiner-Elements needs
+its driver extension approved and then Input Monitoring. Hammerspoon needs
+Accessibility, and "Launch at login" turned on in its own preferences. Until
+both are granted the keyboard behaves as if neither app is installed.
 
 `bin/install` is rerunnable. It reports `ok` for anything already linked, so
 running it after a `git pull` picks up newly tracked files and leaves the rest
@@ -38,9 +42,11 @@ uniform:
 | `.zshenv` | `~/.zshenv` | values every shell needs, interactive or not |
 | `.gitconfig` | `~/.gitconfig` | |
 | `.aerospace.toml` | `~/.aerospace.toml` | window manager; also starts sketchybar |
-| `.config` | `~/.config` | whole directory — sketchybar, gh, ccstatusline |
+| `.config` | `~/.config` | whole directory — sketchybar, gh, ccstatusline, karabiner |
 | `claude/settings.json` | `~/.claude/settings.json` | hooks that drive the fleet scripts |
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | global instructions |
+| `hammerspoon/init.lua` | `~/.hammerspoon/init.lua` | binds the leader key |
+| `hammerspoon/home.toml` | `~/.hammerspoon/home.toml` | the leader tree |
 | `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | |
 | `vscode/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` | |
 
@@ -49,12 +55,61 @@ runtime state — prompt history, conversation transcripts, caches, plugin state
 none of which belongs in a public repo. That is also why the sources sit in an
 undotted `claude/` rather than a `.claude/` that could be linked wholesale.
 
+`~/.hammerspoon` is file by file for the same reason. Hammerspoon writes console
+history there, and `bin/install` clones the Hammerflow spoon into
+`~/.hammerspoon/Spoons` as a separate step.
+
 VS Code's user directory is file by file for the same reason, and more so: beside
 those two files it holds ~2GB of `workspaceStorage`, `History` and
 `globalStorage`. VS Code extensions are not linked at all — the Brewfile's
 `vscode "..."` lines install them, so `brew bundle` restores the set. Settings
 Sync should stay off; it rewrites `settings.json` itself and would fight the
 symlink.
+
+## Keyboard
+
+Two routes to every action.
+
+**Chords on `alt`** are the fast route, in `.aerospace.toml`. A chord earns its
+place by frequency, not by being memorable. Focus and window motion, workspace
+switching, and sending a window to a workspace all live there.
+
+**The tree behind Caps Lock** is the certain route, in `hammerspoon/home.toml`.
+It covers everything, including the actions that also have chords, so you never
+have to remember whether a chord exists. The menu shows your options the moment
+you press the leader. Escape backs out.
+
+The tree is a grammar, not a list. You spell out **noun, verb, object**:
+
+| you press | you get |
+| --- | --- |
+| `CapsLock` `Space` `g` `d` | workspace, go, D |
+| `CapsLock` `Space` `s` `p` | workspace, send window, P |
+| `CapsLock` `w` `m` `l` | window, move, right |
+| `CapsLock` `c` `s` | claude, fleet status |
+
+Two rules keep it composable. `i` `j` `k` `l` always mean up, left, down and
+right, at every level, with no exceptions. That is why "join" is `g` for group
+and "jump" is `n` for next, and it is why no workspace is named `H` through `L`.
+Beyond that, each noun owns its own verbs, so `s` is "send" under workspace and
+"status" under claude.
+
+The nouns are `Space` for workspace, `w` for window, `c` for claude and `s` for
+system. `Space` `Space` searches windows across every workspace.
+
+### What Karabiner does
+
+Caps Lock is not a key any app can bind, so Karabiner turns it into `f18`, which
+nothing else claims. Shift passes through untouched, so Shift-CapsLock still
+gives you Caps Lock.
+
+The other two rules fix the hands rather than the bindings. The built-in
+keyboard and the USB one disagree about where Command and Option sit, so
+`alt` chords land under a different thumb on each. Karabiner swaps the pair on
+the USB keyboard alone, matching it to the Mac. It then maps right Command to
+Option on both, which puts an Option key where the right thumb already rests.
+With one under each thumb you reach `alt` with the hand opposite the letter,
+which is what stops `alt-shift-s` from becoming a one-handed claw.
 
 ## MCP servers
 
@@ -81,8 +136,13 @@ Used from the repo in place, so linking them would be redundant:
 
 - `bin/` — on PATH via `.zshrc`
 - `claude/fleet-*.sh` — called by absolute path from `settings.json`
-- `raycast/` — Raycast is pointed at the directory in its own preferences
 - `Brewfile` — `brew bundle --file`
+
+Hammerflow is not tracked either, for a different reason: it is someone else's
+repo. `bin/install` clones it into `~/.hammerspoon/Spoons` and pulls it on every
+run, so it follows upstream `main`. It publishes no tagged releases, so there is
+no version to pin to. If the leader key behaves differently one morning, that
+repo's recent commits are the first place to look.
 
 ## Machine-local state kept out
 
@@ -90,6 +150,9 @@ Things that write themselves into config directories and would otherwise land in
 the repo, since `~/.config` *is* this repo:
 
 - `.config/raycast/` — ~60MB of downloaded extension bundles, gitignored
+- `.config/karabiner/automatic_backups/` — Karabiner snapshots its config here
+  every time you touch a setting, gitignored. The config itself is tracked, and
+  Karabiner rewrites it in place, so its history lives in git instead
 - `__pycache__/` — byte-compiled sketchybar plugin helpers, gitignored
 - tfenv — keeps its ~85MB-per-release terraform binaries in the same directory as
   its config, and Homebrew's shims default that to `~/.config/tfenv`. `.zshenv`
