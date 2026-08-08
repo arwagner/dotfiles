@@ -27,6 +27,7 @@
     },
     "extensions.ignoreRecommendations": true,
     "workbench.colorTheme": "Dark+",
+    "workbench.editor.enablePreview": false,
     "claudeCode.preferredLocation": "panel",
     "js/ts.updateImportsOnFileMove.enabled": "always",
     "editor.accessibilitySupport": "off",
