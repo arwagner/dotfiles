@@ -8,3 +8,10 @@ __pycache__/
 # Karabiner snapshots karabiner.json here every time you touch its settings.
 # The current config is tracked; its history belongs to git, not to a folder.
 .config/karabiner/automatic_backups/
+
+# npm's update-notifier caches "when did I last check for a new version" here,
+# one file per CLI. A timestamp, not a setting.
+.config/configstore/
+
+# osxphotos writes its stock terminal themes on first run. Regenerated if deleted.
+.config/osxphotos/
