@@ -191,12 +191,38 @@ PY
   )
 fi
 
+# The skills and subagents I write live in the buddy repo, not here. That repo is
+# their home and it ships its own installer, so this repo records only that a
+# machine needs them wired in. Calling buddy's installer keeps one source of
+# truth for the wiring. A second copy of that logic here would drift, and drift
+# is invisible in this particular place: a personal skill in ~/.claude/skills
+# silently wins over a plugin skill of the same name, so a stale link goes
+# unnoticed until the behaviour is wrong.
+#
+# Dropbox may not have synced on a new machine, so a missing buddy is a note
+# rather than a failure. Rerun this script once it lands.
+buddy_install="$HOME/Dropbox/andrew/code/buddy/install.sh"
+
+printf '\n'
+if [ -x "$buddy_install" ]; then
+  if [ "$dry_run" = true ]; then
+    "$buddy_install" --dry-run
+  else
+    "$buddy_install"
+  fi
+elif [ -e "$buddy_install" ]; then
+  printf 'buddy: %s is not executable; skipped\n' "$buddy_install"
+else
+  printf 'buddy: nothing at %s; skipped\n' "$buddy_install"
+  printf 'buddy: Dropbox may not have synced yet. Rerun install once it has.\n'
+fi
+
 if [ "$dry_run" = true ]; then
-  printf '\n%s change(s) to make; nothing written.\n' "$changed"
+  printf '\n%s change(s) to make in this repo; nothing written.\n' "$changed"
   exit 0
 fi
 
-printf '\n%s change(s) made.\n' "$changed"
+printf '\n%s change(s) made in this repo.\n' "$changed"
 
 if [ ${#drifted[@]} -gt 0 ]; then
   printf '\nThese had their own version, kept as *.pre-dotfiles.*:\n'

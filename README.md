@@ -29,7 +29,8 @@ both are granted the keyboard behaves as if neither app is installed.
 
 `bin/install` is rerunnable. It reports `ok` for anything already linked, so
 running it after a `git pull` picks up newly tracked files and leaves the rest
-alone.
+alone. It also runs the `buddy` installer described under [Skills and
+subagents](#skills-and-subagents).
 
 ## What gets linked
 
@@ -65,6 +66,29 @@ those two files it holds ~2GB of `workspaceStorage`, `History` and
 `vscode "..."` lines install them, so `brew bundle` restores the set. Settings
 Sync should stay off; it rewrites `settings.json` itself and would fight the
 symlink.
+
+## Skills and subagents
+
+My own Claude skills are not in this repo. They live in the `buddy` repo at
+`~/Dropbox/andrew/code/buddy`, which ships its own `install.sh` to link them into
+`~/.claude/skills` and `~/.claude/agents`. `bin/install` calls that installer and
+passes `--dry-run` through, so one command still sets up a machine.
+
+The wiring is deliberately in one place only. A personal skill in
+`~/.claude/skills` silently wins over a plugin skill of the same name, so a
+second copy of this logic here would drift without anything reporting it. That
+is also why buddy's installer prunes: a skill deleted from the repo leaves a
+dangling symlink that Claude Code reports as broken, so linking alone never
+converges.
+
+Everything else under `~/.claude/skills` comes from plugins, listed in
+`claude/settings.json` under `enabledPlugins`. Plugins are installed and updated
+through Claude Code, not from here. Do not hand-link a plugin's skills — that
+recreates the shadowing this section exists to prevent.
+
+Buddy arrives through Dropbox rather than a clone, so a fresh machine that has
+not synced yet gets a skipped notice instead of a failure. Rerun `bin/install`
+once it lands.
 
 ## Keyboard
 
