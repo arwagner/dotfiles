@@ -63,7 +63,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "npx ccstatusline@latest"
+    "command": "ccstatusline"
   },
   "enabledPlugins": {
     "spec-flow@skylight": true
