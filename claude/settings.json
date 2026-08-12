@@ -66,8 +66,7 @@
     "command": "npx ccstatusline@latest"
   },
   "enabledPlugins": {
-    "spec-flow@skylight": true,
-    "mattpocock-skills@claude-plugins-official": true
+    "spec-flow@skylight": true
   },
   "extraKnownMarketplaces": {
     "skylight": {
