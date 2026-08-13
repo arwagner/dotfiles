@@ -46,8 +46,7 @@ uniform:
 | `.config` | `~/.config` | whole directory — sketchybar, gh, ccstatusline, karabiner |
 | `claude/settings.json` | `~/.claude/settings.json` | hooks that drive the fleet scripts |
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | global instructions |
-| `hammerspoon/init.lua` | `~/.hammerspoon/init.lua` | binds the leader key |
-| `hammerspoon/home.toml` | `~/.hammerspoon/home.toml` | the leader tree |
+| `hammerspoon/init.lua` | `~/.hammerspoon/init.lua` | gives Shift-CapsLock back a real Caps Lock |
 | `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | |
 | `vscode/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` | |
 
@@ -56,9 +55,8 @@ runtime state — prompt history, conversation transcripts, caches, plugin state
 none of which belongs in a public repo. That is also why the sources sit in an
 undotted `claude/` rather than a `.claude/` that could be linked wholesale.
 
-`~/.hammerspoon` is file by file for the same reason. Hammerspoon writes console
-history there, and `bin/install` clones the Hammerflow spoon into
-`~/.hammerspoon/Spoons` as a separate step.
+`~/.hammerspoon` is file by file for the same reason: Hammerspoon writes console
+history there.
 
 VS Code's user directory is file by file for the same reason, and more so: beside
 those two files it holds ~2GB of `workspaceStorage`, `History` and
@@ -92,40 +90,27 @@ once it lands.
 
 ## Keyboard
 
-Two routes to every action.
+Everything bound is an `alt` chord in `.aerospace.toml`. A chord earns its place
+by frequency, not by being memorable: focus and window motion, workspace
+switching, sending a window to a workspace, and moving a whole workspace to
+another monitor. `i` `j` `k` `l` mean up, left, down and right throughout, which
+is why no workspace is named `H` through `L`.
 
-**Chords on `alt`** are the fast route, in `.aerospace.toml`. A chord earns its
-place by frequency, not by being memorable. Focus and window motion, workspace
-switching, and sending a window to a workspace all live there.
-
-**The tree behind Caps Lock** is the certain route, in `hammerspoon/home.toml`.
-It covers everything, including the actions that also have chords, so you never
-have to remember whether a chord exists. The menu shows your options the moment
-you press the leader. Escape backs out.
-
-The tree is a grammar, not a list. You spell out **noun, verb, object**:
-
-| you press | you get |
-| --- | --- |
-| `CapsLock` `Space` `g` `d` | workspace, go, D |
-| `CapsLock` `Space` `s` `p` | workspace, send window, P |
-| `CapsLock` `w` `m` `l` | window, move, right |
-| `CapsLock` `c` `s` | claude, fleet status |
-
-Two rules keep it composable. `i` `j` `k` `l` always mean up, left, down and
-right, at every level, with no exceptions. That is why "join" is `g` for group
-and "jump" is `n` for next, and it is why no workspace is named `H` through `L`.
-Beyond that, each noun owns its own verbs, so `s` is "send" under workspace and
-"status" under claude.
-
-The nouns are `Space` for workspace, `w` for window, `c` for claude and `s` for
-system. `Space` `Space` searches windows across every workspace.
+Everything else — layout, flatten, reload, rename, the Claude fleet scripts —
+has no key and is run from the CLI. That used to be a Caps Lock leader tree
+built on Hammerspoon and the Hammerflow spoon, spelling out noun-verb-object.
+It was removed: the actions it covered turned out not to be worth a keystroke,
+and the ones that were already had chords. If something in the CLI list starts
+grating, give it a chord rather than rebuilding the tree.
 
 ### What Karabiner does
 
-Caps Lock is not a key any app can bind, so Karabiner turns it into `f18`, which
-nothing else claims. Shift passes through untouched, so Shift-CapsLock still
-gives you Caps Lock.
+Caps Lock is rewritten to `f18` on every keyboard, a key nothing else claims.
+Nothing is bound to bare `f18` any more, so Caps Lock alone does nothing. Shift
+passes through untouched, so Shift-CapsLock arrives as Shift-`f18`, and
+`hammerspoon/init.lua` binds that to toggle the real Caps Lock — the only route
+back, since Karabiner rewrites the key unconditionally. That single binding is
+the entire reason Hammerspoon is still installed.
 
 The other two rules fix the hands rather than the bindings. The built-in
 keyboard and the USB one disagree about where Command and Option sit, so
@@ -162,11 +147,9 @@ Used from the repo in place, so linking them would be redundant:
 - `claude/fleet-*.sh` — called by absolute path from `settings.json`
 - `Brewfile` — `brew bundle --file`
 
-Hammerflow is not tracked either, for a different reason: it is someone else's
-repo. `bin/install` clones it into `~/.hammerspoon/Spoons` and pulls it on every
-run, so it follows upstream `main`. It publishes no tagged releases, so there is
-no version to pin to. If the leader key behaves differently one morning, that
-repo's recent commits are the first place to look.
+`~/.hammerspoon/Spoons` is left over from the leader tree, which loaded the
+Hammerflow spoon from there. Nothing loads a spoon now, so the directory can go
+whenever you next tidy up.
 
 ## Machine-local state kept out
 

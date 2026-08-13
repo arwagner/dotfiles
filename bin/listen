@@ -29,10 +29,10 @@
 
 set -euo pipefail
 
-# The leader tree runs this from Hammerspoon, which starts with a bare PATH.
+# Anything launching this outside a login shell starts it with a bare PATH.
 # `jq` and `ffmpeg` are both Homebrew, so add it. The API key still has to come
-# from the environment, which is why the tree calls this under zsh: .zshenv
-# exports it and zsh reads .zshenv even when it is not interactive.
+# from the environment, so a caller like that has to invoke this under zsh:
+# .zshenv exports it and zsh reads .zshenv even when it is not interactive.
 PATH="/opt/homebrew/bin:$PATH"
 
 DIR="$HOME/.claude/listen"

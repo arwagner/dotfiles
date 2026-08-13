@@ -108,16 +108,18 @@ outer.right =      0
 # What is bound here and what is not
 #
 # A chord earns its place by frequency, not by being memorable. Anything done
-# many times a minute stays here. Everything else moved into the Caps Lock tree
-# in hammerspoon/home.toml, where the menu shows you what your options are.
+# many times a minute stays here. Everything else has no key at all and is run
+# from the CLI, which is a deliberate choice rather than an oversight:
 #
-# So layout, the Claude fleet and the whole service mode are gone from this
-# file. Their tree paths:
+#   layout                aerospace layout tiles|accordion|floating ...
+#   flatten tree          aerospace flatten-workspace-tree
+#   reload this config    aerospace reload-config
+#   rename a workspace    bin/rename-workspace
+#   fleet status, jump    claude/fleet-status.sh list|jump
 #
-#   layout                CapsLock w a t / a / f
-#   fleet status, jump    CapsLock c s / n
-#   flatten tree          CapsLock Space f
-#   reload this config    CapsLock s a
+# These used to hang off a Caps Lock leader tree in hammerspoon/home.toml. The
+# tree is gone; if any of the above turns out to be reached often enough to
+# resent typing, give it an alt chord here rather than rebuilding the tree.
 #
 # close-all-windows-but-current is not bound anywhere now. It was backspace
 # inside service mode, one stray key away from closing your work.

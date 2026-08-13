@@ -82,10 +82,11 @@ cask "flycut"
 cask "font-hack-nerd-font"
 # App icons as ligatures, for the per-workspace app indicators
 cask "font-sketchybar-app-font"
-# Desktop automation. Hosts the Hammerflow spoon, which draws the leader tree
+# Desktop automation. Kept for one binding: giving Shift-CapsLock back a real
+# Caps Lock, which Karabiner's rewrite otherwise takes away
 cask "hammerspoon"
-# Keyboard customiser. Makes Caps Lock the leader key and squares up the
-# modifier positions between the built-in and USB keyboards
+# Keyboard customiser. Rewrites Caps Lock and squares up the modifier positions
+# between the built-in and USB keyboards
 cask "karabiner-elements"
 # Control your tools with a few keystrokes
 cask "raycast"
