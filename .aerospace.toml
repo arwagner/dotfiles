@@ -111,12 +111,11 @@ outer.right =      0
 # many times a minute stays here. Everything else moved into the Caps Lock tree
 # in hammerspoon/home.toml, where the menu shows you what your options are.
 #
-# So layout, the Claude fleet, move-workspace-to-monitor and the whole service
-# mode are gone from this file. Their tree paths:
+# So layout, the Claude fleet and the whole service mode are gone from this
+# file. Their tree paths:
 #
 #   layout                CapsLock w a t / a / f
 #   fleet status, jump    CapsLock c s / n
-#   workspace to monitor  CapsLock Space m j / l
 #   flatten tree          CapsLock Space f
 #   reload this config    CapsLock s a
 #
@@ -142,6 +141,19 @@ alt-shift-l = 'move right'
 # See: https://nikitabobko.github.io/AeroSpace/commands#resize
 alt-shift-minus = 'resize smart -50'
 alt-shift-equal = 'resize smart +50'
+
+# See: https://nikitabobko.github.io/AeroSpace/commands#move-workspace-to-monitor
+# Arrows rather than ijkl: this moves the whole workspace, and the arrow cluster
+# keeps it a deliberate reach instead of one slip away from moving a window.
+# --wrap-around so a two-monitor setup responds to either direction.
+#
+# The cost is that alt-left and alt-right are word-wise cursor movement in every
+# macOS text field, and AeroSpace grabs them globally. If word-jumping starts
+# failing in an editor, this is why.
+alt-up = 'move-workspace-to-monitor --wrap-around up'
+alt-down = 'move-workspace-to-monitor --wrap-around down'
+alt-left = 'move-workspace-to-monitor --wrap-around left'
+alt-right = 'move-workspace-to-monitor --wrap-around right'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#workspace
 alt-1 = 'workspace 1'
