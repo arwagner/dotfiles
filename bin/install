@@ -9,8 +9,8 @@
 # explicit list rather than "link every top-level file" because the mapping is
 # not uniform: .config is linked as a whole directory, claude/ is linked file by
 # file into ~/.claude (that directory is mostly runtime state — transcripts,
-# caches, plugin state — so it cannot be a symlink itself), and bin/ and
-# Brewfile are used in place and never linked at all.
+# caches, plugin state — so it cannot be a symlink itself), and bin/, Brewfile
+# and macos/ are used in place and never linked at all.
 #
 # ~/.hammerspoon is file by file for the same reason as ~/.claude: Hammerspoon
 # keeps its console history there.
@@ -117,6 +117,83 @@ for entry in "${MAP[@]}"; do
   run ln -sfn -- "$src" "$dst"
   changed=$((changed + 1))
 done
+
+# The desktop is a flat #1a1b26, the same colour as the sketchybar bar. The menu
+# bar is set to auto-hide so sketchybar can have the top of the screen, and
+# hammerspoon/init.lua pulls sketchybar out of the way whenever the menu bar
+# drops back down, which leaves the menu bar drawn straight onto the desktop. As
+# of macOS 26 it has no background of its own and tints its text off whatever is
+# behind it, so a flat dark desktop is the whole reason it stays readable.
+#
+# The image is 512x512 rather than screen-sized because it is one colour: every
+# row is identical, so it costs 1.5K instead of 650K and upscales to any display
+# without artifacts.
+#
+# This is applied rather than linked. macOS records the path in a wallpaper store
+# of its own that is not worth editing by hand, so the file is read from the repo
+# in place and set through the public API. It re-applies on every run, which also
+# covers the setting not surviving a reboot.
+wallpaper="$repo/macos/wallpaper.png"
+
+printf '\nWallpaper -> every display:\n'
+if [ ! -f "$wallpaper" ]; then
+  echo "install: missing from repo: macos/wallpaper.png" >&2
+  exit 1
+elif ! command -v swift >/dev/null 2>&1; then
+  printf '  skipped   swift is missing; install the Xcode command line tools\n'
+else
+  # Prints one word: "ok" if every display already shows this file, "set" if it
+  # applied it (or would have, under --dry-run), "none" if there are no displays
+  # to talk to, or "fail <reason>".
+  state="$(swift - "$wallpaper" "$dry_run" <<'SWIFT'
+import AppKit
+
+let url = URL(fileURLWithPath: CommandLine.arguments[1])
+let dryRun = CommandLine.arguments[2] == "true"
+let screens = NSScreen.screens
+
+// Compared as standardized paths rather than as URLs, so that two spellings of
+// the same file do not read as a difference and re-apply on every run.
+func alreadySet(_ screen: NSScreen) -> Bool {
+    NSWorkspace.shared.desktopImageURL(for: screen)?.standardizedFileURL.path
+        == url.standardizedFileURL.path
+}
+
+if screens.isEmpty {
+    print("none")
+} else if screens.allSatisfy(alreadySet) {
+    print("ok")
+} else if dryRun {
+    print("set")
+} else {
+    // Stretched to fill: one colour cannot distort, and this settles what macOS
+    // would otherwise decide about tiling a small square across the desktop.
+    let options: [NSWorkspace.DesktopImageOptionKey: Any] = [
+        .imageScaling: NSNumber(value: NSImageScaling.scaleAxesIndependently.rawValue),
+        .allowClipping: true,
+    ]
+    do {
+        for screen in screens {
+            try NSWorkspace.shared.setDesktopImageURL(url, for: screen, options: options)
+        }
+        print("set")
+    } catch {
+        print("fail \(error.localizedDescription)")
+    }
+}
+SWIFT
+  )"
+
+  case "$state" in
+    ok) printf '  ok        macos/wallpaper.png\n' ;;
+    set)
+      printf '  set       macos/wallpaper.png\n'
+      changed=$((changed + 1))
+      ;;
+    none) printf '  skipped   no displays to set a wallpaper on\n' ;;
+    *) printf '  FAILED    macos/wallpaper.png: %s\n' "${state#fail }" ;;
+  esac
+fi
 
 # MCP servers are user scope, which means ~/.claude.json. That file is not a
 # symlink candidate for the same reason ~/.claude is not. Claude Code rewrites it
