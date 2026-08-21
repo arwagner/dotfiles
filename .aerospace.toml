@@ -111,7 +111,7 @@ outer.right =      0
 # many times a minute stays here. Everything else has no key at all and is run
 # from the CLI, which is a deliberate choice rather than an oversight:
 #
-#   layout                aerospace layout tiles|accordion|floating ...
+#   accordion/floating    aerospace layout accordion|floating
 #   flatten tree          aerospace flatten-workspace-tree
 #   reload this config    aerospace reload-config
 #   rename a workspace    bin/rename-workspace
@@ -143,6 +143,10 @@ alt-shift-l = 'move right'
 # See: https://nikitabobko.github.io/AeroSpace/commands#resize
 alt-shift-minus = 'resize smart -50'
 alt-shift-equal = 'resize smart +50'
+
+# See: https://nikitabobko.github.io/AeroSpace/commands#layout
+# Flip the current container between side-by-side and stacked.
+alt-slash = 'layout horizontal vertical'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#move-workspace-to-monitor
 # Arrows rather than ijkl: this moves the whole workspace, and the arrow cluster
