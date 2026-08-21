@@ -48,7 +48,6 @@
     "claudeCode.preferredLocation": "panel",
     "js/ts.updateImportsOnFileMove.enabled": "always",
     "editor.accessibilitySupport": "off",
-    "chat.viewSessions.orientation": "stacked",
     "terminal.integrated.mouseWheelScrollSensitivity": 3,
     "update.showReleaseNotes": false,
     "dart.flutterSdkPath": "/Users/andrew/Downloads/flutter",
