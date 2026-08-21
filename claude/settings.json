@@ -76,6 +76,7 @@
       }
     }
   },
+  "outputStyle": "ELI5",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark",
