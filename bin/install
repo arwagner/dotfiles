@@ -195,6 +195,70 @@ SWIFT
   esac
 fi
 
+# Claude Code's /terminal-setup sets one thing in Terminal: Option acts as the
+# Meta key, which is what makes Option+Enter insert a newline instead of sending
+# the prompt. It writes that into com.apple.Terminal and nowhere this repo
+# tracks, so a new machine loses it and the command gets run again by hand.
+#
+# Applied through `defaults export | ... | defaults import` rather than the
+# shorter `defaults write -dict-add`. Every profile lives in one "Window
+# Settings" dictionary keyed by profile name, and -dict-add replaces a named
+# profile wholesale with the dict it is handed, which would drop the font and
+# colours along the way. Export, edit the one key, import puts it back intact.
+#
+# Terminal.app holds its preferences in memory and writes them back when it
+# quits, so a change made from inside a Terminal window can be undone by that
+# write. Quit Terminal fully and reopen it; the next run of this script reports
+# whether the setting survived.
+printf '\nTerminal -> Option as Meta key:\n'
+
+# Prints one line: "ok <profile>" if it is already set, "set <profile>" if it
+# applied it (or would have, under --dry-run), or "missing <profile>" if the
+# default profile is not in the preferences at all.
+terminal_state="$(python3 - "$dry_run" <<'TERM_PY'
+import plistlib
+import subprocess
+import sys
+
+dry_run = sys.argv[1] == "true"
+
+exported = subprocess.run(
+    ["defaults", "export", "com.apple.Terminal", "-"],
+    capture_output=True,
+).stdout
+prefs = plistlib.loads(exported) if exported else {}
+
+# Terminal falls back to the profile named Basic when it has never been told
+# otherwise, which is the state of a machine this script has not run on yet.
+name = prefs.get("Default Window Settings", "Basic")
+profile = prefs.get("Window Settings", {}).get(name)
+
+if profile is None:
+    print("missing " + name)
+elif profile.get("useOptionAsMetaKey"):
+    print("ok " + name)
+elif dry_run:
+    print("set " + name)
+else:
+    profile["useOptionAsMetaKey"] = True
+    subprocess.run(
+        ["defaults", "import", "com.apple.Terminal", "-"],
+        input=plistlib.dumps(prefs),
+        check=True,
+    )
+    print("set " + name)
+TERM_PY
+)"
+
+case "$terminal_state" in
+  "ok "*) printf '  ok        %s profile\n' "${terminal_state#ok }" ;;
+  "set "*)
+    printf '  set       %s profile (quit Terminal and reopen it)\n' "${terminal_state#set }"
+    changed=$((changed + 1))
+    ;;
+  *) printf '  skipped   no %s profile in com.apple.Terminal\n' "${terminal_state#missing }" ;;
+esac
+
 # MCP servers are user scope, which means ~/.claude.json. That file is not a
 # symlink candidate for the same reason ~/.claude is not. Claude Code rewrites it
 # constantly with session state: prompt history, the OAuth account, and cached
