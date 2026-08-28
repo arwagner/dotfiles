@@ -41,7 +41,7 @@ uniform:
 | --- | --- | --- |
 | `.zshrc` | `~/.zshrc` | interactive shell: prompt, PATH, tool init |
 | `.zshenv` | `~/.zshenv` | values every shell needs, interactive or not |
-| `.gitconfig` | `~/.gitconfig` | |
+| `.gitconfig` | `~/.gitconfig` | **included**, not linked — see below |
 | `.aerospace.toml` | `~/.aerospace.toml` | window manager; also starts sketchybar |
 | `.config` | `~/.config` | whole directory — sketchybar, gh, ccstatusline, karabiner |
 | `claude/settings.json` | `~/.claude/settings.json` | hooks that drive the fleet scripts |
@@ -54,6 +54,14 @@ uniform:
 runtime state — prompt history, conversation transcripts, caches, plugin state —
 none of which belongs in a public repo. That is also why the sources sit in an
 undotted `claude/` rather than a `.claude/` that could be linked wholesale.
+
+`~/.gitconfig` is the one entry that is not a symlink. `install` writes a stub
+there that `[include]`s this repo's copy, so git reads the same settings while
+the file itself stays disposable. `actions/checkout` copies `~/.gitconfig` into a
+temp `HOME` before adding a `safe.directory` line, but its copy step recreates a
+symlink as a symlink, so a linked `~/.gitconfig` sent every self-hosted runner
+job's write straight back into this repo. The stub gets copied for real, and the
+writes stay in the temp `HOME`.
 
 `~/.hammerspoon` is file by file for the same reason: Hammerspoon writes console
 history there.

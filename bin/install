@@ -15,6 +15,9 @@
 # ~/.hammerspoon is file by file for the same reason as ~/.claude: Hammerspoon
 # keeps its console history there.
 #
+# ~/.gitconfig is the one file this repo deliberately does not symlink; the
+# block after the loop explains why.
+#
 # Existing regular files are moved aside rather than overwritten, so a config
 # that drifted from the repo copy is preserved and reported instead of lost.
 
@@ -24,7 +27,6 @@ set -euo pipefail
 MAP=(
   ".zshrc:.zshrc"
   ".zshenv:.zshenv"
-  ".gitconfig:.gitconfig"
   ".aerospace.toml:.aerospace.toml"
   ".config:.config"
   "claude/settings.json:.claude/settings.json"
@@ -117,6 +119,51 @@ for entry in "${MAP[@]}"; do
   run ln -sfn -- "$src" "$dst"
   changed=$((changed + 1))
 done
+
+# ~/.gitconfig is a real file that includes the repo copy, rather than a symlink
+# to it.
+#
+# actions/checkout guards the global config by copying ~/.gitconfig into a temp
+# HOME and pointing GIT_CONFIG_GLOBAL at the copy, so that the
+# `git config --global --add safe.directory <workdir>` it runs lands somewhere
+# disposable. But @actions/io's cp recreates a symlink as a symlink instead of
+# following it, so while ~/.gitconfig was a link the "copy" pointed straight
+# back here and every job appended another safe.directory line to this repo.
+# That is where the 290 duplicates removed in ca30de0 came from.
+#
+# A stub breaks the chain: the runner copies a regular file, its writes stay in
+# the temp HOME, and git still reads everything in the repo copy via the
+# include. Any other tool that writes to the global config is covered too.
+gitconfig_stub() {
+  cat <<STUB
+# Written by dotfiles/bin/install. Deliberately a real file and not a symlink;
+# bin/install says why.
+[include]
+	path = $repo/.gitconfig
+STUB
+}
+
+printf '\nGit config -> ~/.gitconfig:\n'
+dst="$HOME/.gitconfig"
+if [ ! -L "$dst" ] && [ -f "$dst" ] && gitconfig_stub | cmp -s - "$dst"; then
+  printf '  ok        .gitconfig\n'
+else
+  if [ -L "$dst" ]; then
+    printf '  rewrite   .gitconfig (was a symlink -> %s)\n' "$(readlink -- "$dst")"
+    run rm -- "$dst"
+  elif [ -e "$dst" ]; then
+    backup="$dst.pre-dotfiles.$(date +%Y%m%d%H%M%S)"
+    printf '  BACKUP    .gitconfig is not the include stub -> %s\n' "$(basename -- "$backup")"
+    drifted+=(".gitconfig")
+    run mv -- "$dst" "$backup"
+  else
+    printf '  write     .gitconfig\n'
+  fi
+  if [ "$dry_run" = false ]; then
+    gitconfig_stub > "$dst"
+  fi
+  changed=$((changed + 1))
+fi
 
 # The desktop is a flat #1a1b26, the same colour as the sketchybar bar. The menu
 # bar is set to auto-hide so sketchybar can have the top of the screen, and
