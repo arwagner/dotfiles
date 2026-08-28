@@ -60,6 +60,9 @@ brew "tfenv"
 brew "uv"
 # Graphical user interface for chess
 brew "xboard"
+# General-purpose data compression with high compression ratio — unpacks the
+# Home Assistant OS image in bin/install-homeassistant
+brew "xz"
 # Feature-rich command-line audio/video downloader
 brew "yt-dlp"
 # General-purpose lossless data-compression library
@@ -92,6 +95,9 @@ cask "karabiner-elements"
 cask "raycast"
 # System monitor for the menu bar
 cask "stats"
+# Virtual machines UI using QEMU — hosts Home Assistant OS, built by
+# bin/install-homeassistant
+cask "utm"
 # Open-source code editor — the vscode entries below need its CLI
 cask "visual-studio-code"
 # Open-source version of the X.Org X Window System
