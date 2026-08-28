@@ -9,3 +9,6 @@
     hist = log --decorate --oneline --graph
 [sequence]
 	editor = code --wait --reuse-window
+[safe]
+	directory = /Users/andrew/actions-runner/*
+	directory = /Users/andrew/actions-runners/*
