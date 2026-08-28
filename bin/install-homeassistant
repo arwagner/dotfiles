@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Build the Home Assistant VM in UTM from nothing:
+# Build the Home Assistant VM in UTM from nothing, and keep it running:
 #
-#   install-homeassistant              # download the image and create the VM
+#   install-homeassistant              # download the image, create the VM, load the agent
 #   install-homeassistant --dry-run    # report what would happen, touch nothing
 #
 # Home Assistant runs as a virtual machine because Home Assistant OS is what its
@@ -23,6 +23,9 @@
 #
 # Everything else is here: the pinned version, the exact VM shape, and the
 # checksum. Two machines running this script get the same VM.
+#
+# Rerunnable. An existing VM is reported and left alone, and each step below
+# reports ok rather than repeating itself.
 
 set -euo pipefail
 
@@ -37,6 +40,8 @@ VM_NAME="Home Assistant"
 # add-ons, which are the reason for running Home Assistant OS at all.
 VM_MEMORY_MIB=4096
 VM_CPU_CORES=2
+
+AGENT_LABEL="com.andrew.homeassistant"
 
 CACHE_DIR="$HOME/Library/Caches/dotfiles-haos"
 ARCHIVE="$CACHE_DIR/haos_generic-aarch64-$HAOS_VERSION.qcow2.xz"
@@ -66,116 +71,149 @@ fail() {
 
 # --- prerequisites --------------------------------------------------------
 
-[ "$(uname -m)" = "arm64" ] ||
-  fail "this builds an aarch64 guest and expects an Apple Silicon host"
+check_host() {
+  [ "$(uname -m)" = "arm64" ] ||
+    fail "this builds an aarch64 guest and expects an Apple Silicon host"
 
-[ -d /Applications/UTM.app ] ||
-  fail "UTM is not installed. Run: brew bundle --file ~/dotfiles/Brewfile"
+  [ -d /Applications/UTM.app ] ||
+    fail "UTM is not installed. Run: brew bundle --file ~/dotfiles/Brewfile"
 
-command -v xz >/dev/null ||
-  fail "xz is missing. Run: brew bundle --file ~/dotfiles/Brewfile"
+  command -v xz >/dev/null ||
+    fail "xz is missing. Run: brew bundle --file ~/dotfiles/Brewfile"
 
-# Bridged mode attaches the guest to a real host interface, which is what gives
-# it its own LAN address. Ask the routing table which interface actually carries
-# traffic rather than assuming en0 — that is Wi-Fi on a laptop and often
-# Ethernet on a Mac mini.
-host_interface="$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')"
-[ -n "$host_interface" ] ||
-  fail "no default route, so there is no interface to bridge onto"
+  # Bridged mode attaches the guest to a real host interface, which is what
+  # gives it its own LAN address. Ask the routing table which interface actually
+  # carries traffic rather than assuming en0 — that is Wi-Fi on a laptop and
+  # often Ethernet on a Mac mini.
+  host_interface="$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')"
+  [ -n "$host_interface" ] ||
+    fail "no default route, so there is no interface to bridge onto"
 
-printf 'host      %s (bridging onto %s)\n' "$(uname -m)" "$host_interface"
-
-# --- the VM may already exist ---------------------------------------------
-
-# UTM's AppleScript interface is the only way to create a VM; utmctl can start
-# and stop them but not make one. utmctl list is still the cheapest existence
-# check, and it does not need UTM to be frontmost.
-if utmctl list 2>/dev/null | grep -qF "$VM_NAME"; then
-  printf '  ok        VM "%s" already exists\n' "$VM_NAME"
-  printf '\nNothing to do. Delete it in UTM first if you want a clean rebuild.\n'
-  exit 0
-fi
+  printf 'host      %s (bridging onto %s)\n' "$(uname -m)" "$host_interface"
+}
 
 # --- image ----------------------------------------------------------------
 
-verify() {
+verify_archive() {
   printf '%s  %s\n' "$HAOS_SHA256" "$ARCHIVE" | shasum -a 256 -c --status
 }
 
-if [ -f "$ARCHIVE" ] && verify; then
-  printf '  ok        image %s already downloaded\n' "$HAOS_VERSION"
-else
-  if [ -f "$ARCHIVE" ]; then
-    printf '  redownload  cached image failed its checksum\n'
-    run rm -f -- "$ARCHIVE"
+fetch_image() {
+  if [ -f "$ARCHIVE" ] && verify_archive; then
+    printf '  ok        image %s already downloaded\n' "$HAOS_VERSION"
+  else
+    if [ -f "$ARCHIVE" ]; then
+      printf '  redownload  cached image failed its checksum\n'
+      run rm -f -- "$ARCHIVE"
+    fi
+    printf '  download  %s (~360 MiB)\n' "$(basename -- "$URL")"
+    run mkdir -p -- "$CACHE_DIR"
+    # A partial download must not be left looking like a good one, so write to a
+    # temporary name and only move it into place once the checksum passes.
+    if [ "$dry_run" = false ]; then
+      curl -fL --progress-bar -o "$ARCHIVE.part" "$URL"
+      mv -- "$ARCHIVE.part" "$ARCHIVE"
+      verify_archive || fail "downloaded image does not match the pinned checksum"
+      printf '  ok        checksum matches\n'
+    fi
   fi
-  printf '  download  %s (~360 MiB)\n' "$(basename -- "$URL")"
-  run mkdir -p -- "$CACHE_DIR"
-  # A partial download must not be left looking like a good one, so write to a
-  # temporary name and only move it into place once the checksum passes.
-  if [ "$dry_run" = false ]; then
-    curl -fL --progress-bar -o "$ARCHIVE.part" "$URL"
-    mv -- "$ARCHIVE.part" "$ARCHIVE"
-    verify || fail "downloaded image does not match the pinned checksum"
-    printf '  ok        checksum matches\n'
+
+  if [ -f "$IMAGE" ]; then
+    printf '  ok        image already unpacked\n'
+  else
+    printf '  unpack    %s\n' "$(basename -- "$IMAGE")"
+    # -k keeps the archive, so a rerun after deleting the VM does not redownload.
+    run xz -dk -- "$ARCHIVE"
   fi
-fi
+}
 
-if [ -f "$IMAGE" ]; then
-  printf '  ok        image already unpacked\n'
-else
-  printf '  unpack    %s\n' "$(basename -- "$IMAGE")"
-  # -k keeps the archive, so a rerun after deleting the VM does not redownload.
-  run xz -dk -- "$ARCHIVE"
-fi
+# --- the VM ---------------------------------------------------------------
 
-# --- create the VM --------------------------------------------------------
-
-# UTM copies the source image into its own bundle, so the cached copy above stays
-# untouched and a second run starts from a clean disk.
-#
-# uefi:true is required — the aarch64 image boots through EDK2, not a BIOS.
-# hypervisor:true is what makes this fast; without it QEMU emulates aarch64 in
-# software even on an aarch64 host.
-read -r -d '' osa <<APPLESCRIPT || true
+create_vm() {
+  # UTM copies the source image into its own bundle, so the cached copy stays
+  # untouched and a rebuild starts from a clean disk.
+  #
+  # uefi:true is required — the aarch64 image boots through EDK2, not a BIOS.
+  # hypervisor:true is what makes this fast; without it QEMU emulates aarch64 in
+  # software even on an aarch64 host.
+  local osa vm_id
+  read -r -d '' osa <<APPLESCRIPT || true
 tell application "UTM"
   set vm to make new virtual machine with properties {backend:qemu, configuration:{name:"$VM_NAME", architecture:"aarch64", machine:"virt", memory:$VM_MEMORY_MIB, cpu cores:$VM_CPU_CORES, hypervisor:true, uefi:true, drives:{{source:POSIX file "$IMAGE", interface:VirtIO}}, network interfaces:{{mode:bridged, host interface:"$host_interface"}}}}
   return id of vm
 end tell
 APPLESCRIPT
 
-printf '  create    VM "%s" (%s MiB, %s cores, bridged)\n' \
-  "$VM_NAME" "$VM_MEMORY_MIB" "$VM_CPU_CORES"
+  printf '  create    VM "%s" (%s MiB, %s cores, bridged)\n' \
+    "$VM_NAME" "$VM_MEMORY_MIB" "$VM_CPU_CORES"
+
+  [ "$dry_run" = false ] || return 0
+
+  # UTM has to be running to answer AppleScript at all.
+  open -a UTM
+  for _ in $(seq 1 30); do
+    pgrep -qx UTM && break
+    sleep 1
+  done
+
+  # The first osascript against a new app raises the macOS Automation prompt. A
+  # denial arrives as an error here rather than a hang, so say what it means.
+  if ! vm_id="$(osascript -e "$osa" 2>&1)"; then
+    printf 'install-homeassistant: UTM refused to create the VM:\n%s\n' "$vm_id" >&2
+    printf '\nIf that mentions "Not authorized", grant this terminal control of UTM\n' >&2
+    printf 'in System Settings > Privacy & Security > Automation, then rerun.\n' >&2
+    exit 1
+  fi
+
+  printf '  ok        created (%s)\n' "$vm_id"
+}
+
+# --- keep it running ------------------------------------------------------
+
+# Quitting UTM stops every VM it hosts, so without the agent the guest dies with
+# the app and a reboot leaves nothing behind. bin/install links the plist;
+# loading it is a separate act, and it belongs with the rest of Home Assistant
+# rather than in that generic script.
+load_agent() {
+  local plist="$HOME/Library/LaunchAgents/$AGENT_LABEL.plist"
+
+  if [ ! -e "$plist" ]; then
+    printf '  skip      %s is not linked yet; run bin/install first\n' "$AGENT_LABEL"
+  elif launchctl print "gui/$(id -u)/$AGENT_LABEL" >/dev/null 2>&1; then
+    printf '  ok        %s already loaded\n' "$AGENT_LABEL"
+  else
+    printf '  load      %s\n' "$AGENT_LABEL"
+    run launchctl bootstrap "gui/$(id -u)" "$plist"
+  fi
+}
+
+# --- run ------------------------------------------------------------------
+
+check_host
+
+# utmctl can start and stop VMs but not create them, so creation goes through
+# AppleScript below. Listing is still the cheapest existence check.
+if utmctl list 2>/dev/null | grep -qF "$VM_NAME"; then
+  printf '  ok        VM "%s" already exists\n' "$VM_NAME"
+else
+  fetch_image
+  create_vm
+fi
+
+load_agent
 
 if [ "$dry_run" = true ]; then
   printf '\nNothing written.\n'
   exit 0
 fi
 
-# UTM has to be running to answer AppleScript at all.
-open -a UTM
-for _ in $(seq 1 30); do
-  pgrep -qx UTM && break
-  sleep 1
-done
-
-# The first osascript against a new app raises the macOS Automation prompt. A
-# denial arrives as an error here rather than a hang, so say what it means.
-if ! vm_id="$(osascript -e "$osa" 2>&1)"; then
-  printf 'install-homeassistant: UTM refused to create the VM:\n%s\n' "$vm_id" >&2
-  printf '\nIf that mentions "Not authorized", grant this terminal control of UTM\n' >&2
-  printf 'in System Settings > Privacy & Security > Automation, then rerun.\n' >&2
-  exit 1
-fi
-
-printf '  ok        created (%s)\n' "$vm_id"
-
 cat <<NEXT
 
-Start it:
-  utmctl start "$VM_NAME"
+The launch agent starts the VM at login. To bring it up now, or after quitting
+UTM by accident:
+  homeassistant-start
 
-Then wait a few minutes on first boot and open:
+Then open:
   http://homeassistant.local:8123
 
 If that name does not resolve, ask the guest for its address:

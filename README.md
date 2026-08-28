@@ -49,6 +49,7 @@ uniform:
 | `claude/settings.json` | `~/.claude/settings.json` | hooks that drive the fleet scripts |
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | global instructions |
 | `hammerspoon/init.lua` | `~/.hammerspoon/init.lua` | gives Shift-CapsLock back a real Caps Lock |
+| `launchd/com.andrew.homeassistant.plist` | `~/Library/LaunchAgents/…` | starts the Home Assistant VM at login |
 | `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | |
 | `vscode/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` | |
 
@@ -181,6 +182,20 @@ written once, and safe to sync — set that up under Settings > System > Backups
 
 The compressed download is cached in `~/Library/Caches/dotfiles-haos` rather
 than the repo, so a rebuild after deleting the VM does not fetch 360 MiB again.
+
+Quitting UTM stops every VM it hosts, so the guest dies with the app and a
+reboot leaves nothing running. `launchd/com.andrew.homeassistant.plist` starts
+it again at login. It runs `bin/homeassistant-start`, which opens UTM, waits for
+the VM registry to load, and starts the VM only if it is not already up — so it
+is also the thing to run by hand after an accidental quit. The plist reaches the
+script through `$HOME` rather than a hardcoded path, since launchd sets `HOME`
+for a user agent but does not expand `~` in `ProgramArguments`.
+
+`bin/install` links that plist; `bin/install-homeassistant` is what loads it.
+Linking and loading are separate acts, and a `launchctl bootstrap` for one
+specific service does not belong in the generic installer. launchd is happy to
+bootstrap the symlink and resolves it back to the repo copy, so this one does
+not need the real-file treatment `~/.gitconfig` gets.
 
 Like Karabiner and Hammerspoon, this needs one permission macOS only grants by
 hand: the first run asks to let the terminal control UTM. Denying it fails the

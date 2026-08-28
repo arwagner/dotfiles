@@ -33,6 +33,7 @@ MAP=(
   "claude/CLAUDE.md:.claude/CLAUDE.md"
   "claude/commands:.claude/commands"
   "hammerspoon/init.lua:.hammerspoon/init.lua"
+  "launchd/com.andrew.homeassistant.plist:Library/LaunchAgents/com.andrew.homeassistant.plist"
   "vscode/settings.json:Library/Application Support/Code/User/settings.json"
   "vscode/keybindings.json:Library/Application Support/Code/User/keybindings.json"
 )

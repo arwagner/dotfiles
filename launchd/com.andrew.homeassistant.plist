@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.andrew.homeassistant</string>
+  <!-- launchd does not expand ~ in ProgramArguments, but it does set HOME for a
+       user agent, so going through sh keeps this free of a hardcoded username. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>exec "$HOME/dotfiles/bin/homeassistant-start"</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/tmp/homeassistant-start.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/homeassistant-start.err</string>
+</dict>
+</plist>

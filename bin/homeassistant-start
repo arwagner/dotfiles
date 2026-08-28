@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+# Bring the Home Assistant VM up, from any starting state:
+#
+#   homeassistant-start
+#
+# Quitting UTM stops every VM it is running, so the guest dies with the app and
+# a reboot leaves nothing running. This is what com.andrew.homeassistant runs at
+# login, and it is also the thing to run by hand after an accidental quit.
+#
+# Safe to run when the VM is already up: it checks first and does nothing.
+
+set -euo pipefail
+
+VM_NAME="Home Assistant"
+
+# The Homebrew symlink for utmctl lives on PATH, which a launchd agent does not
+# get. Go to the binary inside the app instead, which is where that symlink
+# points anyway.
+UTMCTL="/Applications/UTM.app/Contents/MacOS/utmctl"
+
+[ -x "$UTMCTL" ] || {
+  echo "homeassistant-start: UTM is not installed" >&2
+  exit 1
+}
+
+# utmctl talks to the running app, so with UTM closed it blocks for a long while
+# and then reports the VM missing. Start the app first. -g keeps it from stealing
+# focus, which matters when this runs at login.
+open -g -a UTM
+
+# The VM registry is not readable the instant the process exists, so wait for the
+# name to appear rather than racing it.
+for _ in $(seq 1 60); do
+  if "$UTMCTL" list 2>/dev/null | grep -qF "$VM_NAME"; then
+    break
+  fi
+  sleep 1
+done
+
+status="$("$UTMCTL" status "$VM_NAME" 2>/dev/null || true)"
+
+case "$status" in
+  started | starting)
+    echo "homeassistant-start: already $status"
+    ;;
+  "")
+    echo "homeassistant-start: UTM does not know a VM called \"$VM_NAME\"" >&2
+    echo "homeassistant-start: run install-homeassistant to build it" >&2
+    exit 1
+    ;;
+  *)
+    "$UTMCTL" start "$VM_NAME"
+    echo "homeassistant-start: started (was $status)"
+    ;;
+esac
