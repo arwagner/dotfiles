@@ -358,6 +358,111 @@ PY
   )
 fi
 
+# spec-flow is a plugin I work on, so it points at its checkout instead of the
+# frozen copy Claude Code unpacked when it installed the plugin. An edit in the
+# checkout is then live on the next start, with no publish-and-reinstall round
+# trip.
+#
+# The link replaces the installPath Claude Code recorded rather than a fixed
+# path, because that directory is named after the installed version and moves
+# with it. The record is read and never written: Claude Code stays the only
+# writer of its own state, and this only redirects where the payload is read
+# from.
+#
+# The checkout is a source repo and not a package. Everything the plugin loads —
+# skills/, agents/, templates/ — is copied verbatim into a package, so the layout
+# already matches; the one missing piece is .claude-plugin/plugin.json, which
+# scripts/lib/plugin-package.mjs builds and .gitignore keeps out of the repo.
+# Without that file Claude Code sees no plugin at all, so it is written here the
+# same way the packager builds it: packaging/plugin.common.json under
+# packaging/claude.json.
+#
+# `/plugin update spec-flow` would download over the link. autoUpdates is off in
+# claude/settings.json, so that only happens on request.
+#
+# Dropbox may not have synced on a new machine, and the plugin has to be
+# installed through Claude Code before there is an installPath to redirect, so
+# either gap is a note rather than a failure.
+spec_flow_src="$HOME/Dropbox/andrew/skylight/code/spec-flow"
+
+printf '\nspec-flow plugin -> ~/%s:\n' "${spec_flow_src#"$HOME"/}"
+
+# Prints the installPath of the user-scope install, or nothing if the plugin has
+# never been installed.
+spec_flow_dst="$(python3 - "$HOME/.claude/plugins/installed_plugins.json" <<'PY'
+import json, os, sys
+
+path = sys.argv[1]
+doc = json.load(open(path)) if os.path.exists(path) else {}
+for install in doc.get("plugins", {}).get("spec-flow@skylight", []):
+    print(install.get("installPath", ""))
+    break
+PY
+)"
+
+if [ ! -d "$spec_flow_src" ]; then
+  printf '  skipped   nothing at %s\n' "$spec_flow_src"
+  printf '  skipped   Dropbox may not have synced yet. Rerun install once it has.\n'
+elif [ -z "$spec_flow_dst" ]; then
+  printf '  skipped   not installed; add it in Claude Code with /plugin first\n'
+else
+  # Prints "ok" or "write". The manifest is derived, so it is rewritten whenever
+  # the packaging files move rather than only when it is absent.
+  manifest_state="$(python3 - "$spec_flow_src" "$dry_run" <<'PY'
+import json, os, sys
+
+repo, dry_run = sys.argv[1], sys.argv[2] == "true"
+
+
+def read(*parts):
+    return json.load(open(os.path.join(repo, *parts)))
+
+
+# Mirrors plugin-package.mjs: the common metadata, the Claude overlay on top,
+# and its own version.
+want = json.dumps({**read("packaging", "plugin.common.json"), **read("packaging", "claude.json")}, indent=2) + "\n"
+path = os.path.join(repo, ".claude-plugin", "plugin.json")
+
+if os.path.exists(path) and open(path).read() == want:
+    print("ok")
+else:
+    if not dry_run:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as handle:
+            handle.write(want)
+    print("write")
+PY
+)"
+
+  if [ "$manifest_state" = ok ]; then
+    printf '  ok        .claude-plugin/plugin.json\n'
+  else
+    printf '  write     .claude-plugin/plugin.json (gitignored in that repo)\n'
+    changed=$((changed + 1))
+  fi
+
+  label="${spec_flow_dst#"$HOME"/}"
+  if [ -L "$spec_flow_dst" ] && [ "$(readlink -- "$spec_flow_dst")" = "$spec_flow_src" ]; then
+    printf '  ok        ~/%s\n' "$label"
+  else
+    if [ -L "$spec_flow_dst" ]; then
+      printf '  relink    ~/%s (was -> %s)\n' "$label" "$(readlink -- "$spec_flow_dst")"
+      run rm -- "$spec_flow_dst"
+    elif [ -e "$spec_flow_dst" ]; then
+      # The downloaded copy is kept: it is the only way back if the checkout is
+      # mid-rewrite and the plugin has to load anyway.
+      backup="$spec_flow_dst.pre-dotfiles.$(date +%Y%m%d%H%M%S)"
+      printf '  BACKUP    ~/%s is the downloaded copy -> %s\n' "$label" "$(basename -- "$backup")"
+      run mv -- "$spec_flow_dst" "$backup"
+    else
+      printf '  link      ~/%s\n' "$label"
+      run mkdir -p -- "$(dirname -- "$spec_flow_dst")"
+    fi
+    run ln -s -- "$spec_flow_src" "$spec_flow_dst"
+    changed=$((changed + 1))
+  fi
+fi
+
 # The skills and subagents I write live in the buddy repo, not here. That repo is
 # their home and it ships its own installer, so this repo records only that a
 # machine needs them wired in. Calling buddy's installer keeps one source of

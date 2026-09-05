@@ -95,6 +95,15 @@ Everything else under `~/.claude/skills` comes from plugins, listed in
 through Claude Code, not from here. Do not hand-link a plugin's skills — that
 recreates the shadowing this section exists to prevent.
 
+The one plugin this repo touches is spec-flow, and it touches the whole plugin
+rather than any skill inside it. It is a plugin I work on, so `bin/install`
+replaces the copy Claude Code downloaded with a symlink to its checkout at
+`~/Dropbox/andrew/skylight/code/spec-flow`, and writes the
+`.claude-plugin/plugin.json` that repo generates at package time and gitignores.
+An edit there is then live on the next start. `/plugin update spec-flow` would
+download over the link; `autoUpdates` is off, so that only happens on request,
+and rerunning `bin/install` puts the link back.
+
 Buddy arrives through Dropbox rather than a clone, so a fresh machine that has
 not synced yet gets a skipped notice instead of a failure. Rerun `bin/install`
 once it lands.
