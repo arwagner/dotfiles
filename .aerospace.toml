@@ -147,6 +147,10 @@ alt-shift-equal = 'resize smart +50'
 # See: https://nikitabobko.github.io/AeroSpace/commands#layout
 # Flip the current container between side-by-side and stacked.
 alt-slash = 'layout horizontal vertical'
+# Flip the current container between tiling and stacking windows on top of each
+# other. A workspace that has drifted into accordion looks like nothing is
+# tiling at all, so keep the way back one keystroke away.
+alt-comma = 'layout tiles accordion'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#move-workspace-to-monitor
 # Arrows rather than ijkl: this moves the whole workspace, and the arrow cluster
