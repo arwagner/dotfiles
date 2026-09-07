@@ -21,7 +21,13 @@ tfenv install && tfenv use <version>
 exec zsh
 ```
 
-Then start AeroSpace, which starts sketchybar in turn.
+`launchd/com.andrew.aerospace.plist` starts AeroSpace at login, which starts
+sketchybar in turn — `bin/install` links the plist but does not load it, so on a
+first setup run it once by hand:
+
+```sh
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.andrew.aerospace.plist
+```
 
 Two apps need permissions macOS only grants by hand. Karabiner-Elements needs
 its driver extension approved and then Input Monitoring. Hammerspoon needs
@@ -50,6 +56,7 @@ uniform:
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | global instructions |
 | `hammerspoon/init.lua` | `~/.hammerspoon/init.lua` | gives Shift-CapsLock back a real Caps Lock |
 | `launchd/com.andrew.homeassistant.plist` | `~/Library/LaunchAgents/…` | starts the Home Assistant VM at login |
+| `launchd/com.andrew.aerospace.plist` | `~/Library/LaunchAgents/…` | starts AeroSpace at login and relaunches it if it crashes |
 | `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | |
 | `vscode/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` | |
 

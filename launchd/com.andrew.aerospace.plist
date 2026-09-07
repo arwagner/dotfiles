@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.andrew.aerospace</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Applications/AeroSpace.app/Contents/MacOS/AeroSpace</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <!-- SuccessfulExit:false means "restart it only when it did not exit cleanly" —
+       a crash (AeroSpace 0.21.3-Beta segfaults on some display/space changes,
+       see nikitabobko/AeroSpace#506) relaunches within a second or two, but a
+       deliberate quit (exit 0) is left alone instead of fighting it. -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/tmp/aerospace.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/aerospace.err</string>
+</dict>
+</plist>

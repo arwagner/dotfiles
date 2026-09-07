@@ -31,8 +31,11 @@ exec-on-workspace-change = [
   '/opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
 ]
 
-# Start AeroSpace at login
-start-at-login = true
+# Start AeroSpace at login. False because launchd/com.andrew.aerospace.plist
+# owns launching AeroSpace now — it starts it at login and relaunches it if it
+# crashes (see nikitabobko/AeroSpace#506), which AeroSpace's own start-at-login
+# does not do.
+start-at-login = false
 
 # Normalizations. See: https://nikitabobko.github.io/AeroSpace/guide#normalization
 enable-normalization-flatten-containers = true
