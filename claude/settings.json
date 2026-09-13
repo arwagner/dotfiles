@@ -76,6 +76,11 @@
       }
     }
   },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
   "outputStyle": "default",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
