@@ -75,6 +75,8 @@ brew "felixkratz/formulae/sketchybar"
 cask "nikitabobko/tap/aerospace", trusted: true
 # Compact TeX distribution as alternative to the full TeX Live / MacTeX
 cask "basictex"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Voice and text chat software
 cask "discord"
 # Client for the Dropbox cloud storage service
