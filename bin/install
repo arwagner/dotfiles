@@ -13,7 +13,8 @@
 # and macos/ are used in place and never linked at all.
 #
 # ~/.hammerspoon is file by file for the same reason as ~/.claude: Hammerspoon
-# keeps its console history there.
+# keeps its console history there. So is ~/.codex, and more pointedly: beside
+# config.toml it holds auth.json, the live ChatGPT OAuth credentials.
 #
 # ~/.gitconfig is the one file this repo deliberately does not symlink; the
 # block after the loop explains why.
@@ -32,6 +33,7 @@ MAP=(
   "claude/settings.json:.claude/settings.json"
   "claude/CLAUDE.md:.claude/CLAUDE.md"
   "claude/commands:.claude/commands"
+  "codex/config.toml:.codex/config.toml"
   "hammerspoon/init.lua:.hammerspoon/init.lua"
   "launchd/com.andrew.homeassistant.plist:Library/LaunchAgents/com.andrew.homeassistant.plist"
   "launchd/com.andrew.aerospace.plist:Library/LaunchAgents/com.andrew.aerospace.plist"

@@ -54,11 +54,16 @@ uniform:
 | `.config` | `~/.config` | whole directory — sketchybar, gh, ccstatusline, karabiner |
 | `claude/settings.json` | `~/.claude/settings.json` | hooks that drive the fleet scripts |
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | global instructions |
+| `codex/config.toml` | `~/.codex/config.toml` | Codex CLI settings |
 | `hammerspoon/init.lua` | `~/.hammerspoon/init.lua` | gives Shift-CapsLock back a real Caps Lock |
 | `launchd/com.andrew.homeassistant.plist` | `~/Library/LaunchAgents/…` | starts the Home Assistant VM at login |
 | `launchd/com.andrew.aerospace.plist` | `~/Library/LaunchAgents/…` | starts AeroSpace at login and relaunches it if it crashes |
 | `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | |
 | `vscode/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` | |
+
+`~/.codex` is linked file by file for a sharper version of the same reason:
+`auth.json` sits next to `config.toml` and holds live ChatGPT OAuth
+credentials, so only `config.toml` is tracked.
 
 `~/.claude` is linked file by file instead of as a directory because it is mostly
 runtime state — prompt history, conversation transcripts, caches, plugin state —

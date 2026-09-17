@@ -1,0 +1,25 @@
+# Codex CLI settings, linked to ~/.codex/config.toml by bin/install.
+#
+# Only this file is tracked. The rest of ~/.codex is runtime state that must
+# not reach a public repo: auth.json holds live ChatGPT OAuth credentials,
+# alongside log/, tmp/, sessions and history. That is the same reason ~/.claude
+# is linked file by file rather than as a directory.
+#
+# Every key below is commented out, so Codex runs on its own defaults until you
+# choose otherwise. Uncomment what you want to pin. `codex --strict-config`
+# rejects unknown fields, and `codex doctor` reports the values actually in
+# effect — run either after editing.
+
+# Model the agent uses. `codex doctor` prints the current default.
+# model = "gpt-5.6-terra"
+
+# When Codex stops to ask before running a command:
+# "on-failure" | "on-request" | "never"
+# approval_policy = "on-request"
+
+# How much the sandbox lets a command touch:
+# "read-only" | "workspace-write" | "danger-full-access"
+# sandbox_mode = "workspace-write"
+
+# Reasoning depth: "none" | "minimal" | "low" | "medium" | "high" | "xhigh"
+# model_reasoning_effort = "medium"
