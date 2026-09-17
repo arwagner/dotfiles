@@ -5,21 +5,135 @@
 # alongside log/, tmp/, sessions and history. That is the same reason ~/.claude
 # is linked file by file rather than as a directory.
 #
-# Every key below is commented out, so Codex runs on its own defaults until you
-# choose otherwise. Uncomment what you want to pin. `codex --strict-config`
-# rejects unknown fields, and `codex doctor` reports the values actually in
-# effect — run either after editing.
+# Shared behavior migrated from claude/settings.json and claude/CLAUDE.md.
+# Keep workspace write access, but do not disable Codex's sandbox entirely.
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+check_for_update_on_startup = false
+analytics.enabled = false
+feedback.enabled = false
+project_doc_fallback_filenames = ["CLAUDE.md"]
+developer_instructions = """
+- When input or a decision is needed, ask in plain text; do not use a structured question picker.
+- Never credit Codex, OpenAI, or any AI as an author or co-author. Do not add AI co-author trailers, generated-by footers, or equivalent attribution to commits, pull requests, issues, or comments.
+- Keep reports extremely concise; sacrifice grammar for concision.
+"""
 
-# Model the agent uses. `codex doctor` prints the current default.
-# model = "gpt-5.6-terra"
+[tui]
+# Closest equivalents to Claude's fullscreen TUI, disabled spinner tips, and
+# agent push notifications. Codex has no command-backed status line.
+alternate_screen = "always"
+animations = false
+notifications = true
 
-# When Codex stops to ask before running a command:
-# "on-failure" | "on-request" | "never"
-# approval_policy = "on-request"
+[features]
+hooks = true
 
-# How much the sandbox lets a command touch:
-# "read-only" | "workspace-write" | "danger-full-access"
-# sandbox_mode = "workspace-write"
+[mcp_servers.todo]
+command = "ssh"
+args = [
+  "-o",
+  "BatchMode=yes",
+  "root@187.124.159.132",
+  "runuser -u todo -- env TODO_DB=/var/lib/todo/todo.db TODO_TOKEN=${TODO_API_KEY} /opt/node24/bin/node --disable-warning=ExperimentalWarning /opt/todo/current/src/adapters/mcp/main.ts",
+]
+default_tools_approval_mode = "auto"
 
-# Reasoning depth: "none" | "minimal" | "low" | "medium" | "high" | "xhigh"
-# model_reasoning_effort = "medium"
+# Claude commands become globally available Codex skills.
+[[skills.config]]
+path = "/Users/andrew/dotfiles/codex/skills/babysit"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/dotfiles/codex/skills/listen"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/dotfiles/codex/skills/spotify"
+enabled = true
+
+# Buddy remains the source of truth; register its folders directly so Dropbox
+# edits are live without copying or shadowing Codex's built-in skills.
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/answer"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/build"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/clarify"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/coding-standards"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/commit"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/discuss"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/explain"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/explain-branch"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/review-code"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/roadmap"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/scratchpad"
+enabled = true
+
+[[skills.config]]
+path = "/Users/andrew/Dropbox/andrew/code/buddy/skills/topic"
+enabled = true
+
+# Claude's idle notification has no exact Codex event. Stop is the closest
+# lifecycle point, while PermissionRequest preserves the waiting-for-approval
+# state.
+[[hooks.PermissionRequest]]
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = "bash /Users/andrew/dotfiles/claude/fleet-waiting.sh permission"
+timeout = 5
+
+[[hooks.UserPromptSubmit]]
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = "bash /Users/andrew/dotfiles/claude/fleet-mark.sh working"
+timeout = 5
+
+[[hooks.Stop]]
+[[hooks.Stop.hooks]]
+type = "command"
+command = "bash /Users/andrew/dotfiles/claude/fleet-waiting.sh idle"
+timeout = 5
+
+[[hooks.SessionEnd]]
+[[hooks.SessionEnd.hooks]]
+type = "command"
+command = "bash /Users/andrew/dotfiles/claude/fleet-clear.sh"
+timeout = 5
+
+[projects."/Users/andrew/dotfiles"]
+trust_level = "trusted"
+
+[projects."/Users/andrew/Dropbox/andrew/skylight/code/dtak-prototype"]
+trust_level = "trusted"
+
+[plugins."spec-flow@personal"]
+enabled = true
