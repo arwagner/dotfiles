@@ -1,3 +1,4 @@
+tap "deskflow/tap"
 tap "felixkratz/formulae", "https://github.com/FelixKratz/homebrew-formulae", trusted: true
 tap "homebrew/bundle"
 tap "mongodb/brew"
@@ -77,6 +78,8 @@ cask "nikitabobko/tap/aerospace", trusted: true
 cask "basictex"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
+# Share one keyboard and mouse across machines
+cask "deskflow/tap/deskflow", trusted: true
 # Voice and text chat software
 cask "discord"
 # Client for the Dropbox cloud storage service
