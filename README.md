@@ -54,16 +54,30 @@ uniform:
 | `.config` | `~/.config` | whole directory — sketchybar, gh, ccstatusline, karabiner |
 | `claude/settings.json` | `~/.claude/settings.json` | hooks that drive the fleet scripts |
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | global instructions |
-| `codex/config.toml` | `~/.codex/config.toml` | Codex CLI settings |
+| `codex/config.toml` | `~/.codex/config.toml` | Codex CLI settings — **copied**, not linked — see below |
 | `hammerspoon/init.lua` | `~/.hammerspoon/init.lua` | gives Shift-CapsLock back a real Caps Lock |
 | `launchd/com.andrew.homeassistant.plist` | `~/Library/LaunchAgents/…` | starts the Home Assistant VM at login |
 | `launchd/com.andrew.aerospace.plist` | `~/Library/LaunchAgents/…` | starts AeroSpace at login and relaunches it if it crashes |
 | `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | |
 | `vscode/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` | |
 
-`~/.codex` is linked file by file for a sharper version of the same reason:
-`auth.json` sits next to `config.toml` and holds live ChatGPT OAuth
-credentials, so only `config.toml` is tracked.
+`~/.codex` is not linked at all. `auth.json` sits next to `config.toml` and
+holds live ChatGPT OAuth credentials, so only `config.toml` is tracked — and
+that one is copied rather than linked, because Codex writes state into its own
+config file. It records a `[hooks.state]` trust hash per hook, so it can tell
+when a hook changed since you approved it, and a `[tui.model_availability_nux]`
+counter for the "new model available" notice. The hook keys embed the absolute
+path of the file that declared them, so they mean nothing on another machine.
+Codex offers no way to keep that state elsewhere: hooks can move to
+`~/.codex/hooks.json`, but the trust table still lands in `config.toml`. While
+the file was a symlink, every Codex session dirtied this repo.
+
+So `install` writes the repo copy out and keeps the sha of what it wrote in
+`~/.codex/.config.toml.installed-sha`. That is how it tells an edit made here,
+which it copies over quietly, from an edit made to the live file, which it backs
+up first. Codex's state is dropped on rewrite, which costs one "trust all" the
+next time Codex starts. Edits to `codex/config.toml` need an `install` run to
+take effect.
 
 `~/.claude` is linked file by file instead of as a directory because it is mostly
 runtime state — prompt history, conversation transcripts, caches, plugin state —

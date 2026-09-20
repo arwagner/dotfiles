@@ -13,8 +13,11 @@
 # and macos/ are used in place and never linked at all.
 #
 # ~/.hammerspoon is file by file for the same reason as ~/.claude: Hammerspoon
-# keeps its console history there. So is ~/.codex, and more pointedly: beside
-# config.toml it holds auth.json, the live ChatGPT OAuth credentials.
+# keeps its console history there.
+#
+# ~/.codex is not linked either — beside config.toml it holds auth.json, the
+# live ChatGPT OAuth credentials — and config.toml itself is not even a symlink,
+# because Codex writes state into it. The block below the loop says why.
 #
 # ~/.gitconfig is the one file this repo deliberately does not symlink; the
 # block after the loop explains why.
@@ -33,7 +36,6 @@ MAP=(
   "claude/settings.json:.claude/settings.json"
   "claude/CLAUDE.md:.claude/CLAUDE.md"
   "claude/commands:.claude/commands"
-  "codex/config.toml:.codex/config.toml"
   "hammerspoon/init.lua:.hammerspoon/init.lua"
   "launchd/com.andrew.homeassistant.plist:Library/LaunchAgents/com.andrew.homeassistant.plist"
   "launchd/com.andrew.aerospace.plist:Library/LaunchAgents/com.andrew.aerospace.plist"
@@ -309,6 +311,101 @@ case "$terminal_state" in
     ;;
   *) printf '  skipped   no %s profile in com.apple.Terminal\n' "${terminal_state#missing }" ;;
 esac
+
+# ~/.codex/config.toml is a copy rather than a symlink, because Codex persists
+# state into its own config file: one
+# [hooks.state."<file>:<event>:<i>:<j>"] trusted_hash per hook, which it
+# compares on startup to decide whether a hook changed since it was approved,
+# and a [tui.model_availability_nux] counter for the "new model available"
+# notice. Neither is configuration. The hook keys even embed the absolute path
+# of the file that declared the hook, so they are worthless on another machine.
+# While config.toml was a symlink, every Codex session dirtied this repo.
+#
+# Codex has no setting that moves that state: hooks can be declared in
+# ~/.codex/hooks.json instead of config.toml, but the trust table is still
+# written back to config.toml, and only MDM-managed hooks skip trust entirely.
+#
+# So the repo copy is the source of truth and this writes it out. The sha of
+# what was last installed is kept beside it, which is what separates an edit
+# made here (rewrite quietly) from an edit made to the live file (back it up
+# first). Codex's state is ignored in that comparison and lost on rewrite,
+# which costs one "trust all" at the next Codex startup.
+codex_src="$repo/codex/config.toml"
+codex_dst="$HOME/.codex/config.toml"
+codex_stamp="$HOME/.codex/.config.toml.installed-sha"
+
+# The sha of a config with Codex's generated tables dropped, so that a live file
+# differing only by state compares equal to the repo copy. It hashes the parsed
+# TOML rather than the text, which also means a comment-only edit here does not
+# count as a change worth rewriting the live file for.
+codex_sha() {
+  python3 - "$1" <<'CODEX_PY'
+import hashlib
+import json
+import sys
+import tomllib
+
+with open(sys.argv[1], "rb") as f:
+    config = tomllib.load(f)
+
+config.get("hooks", {}).pop("state", None)
+config.get("tui", {}).pop("model_availability_nux", None)
+
+canonical = json.dumps(config, sort_keys=True, separators=(",", ":"))
+print(hashlib.sha256(canonical.encode()).hexdigest())
+CODEX_PY
+}
+
+printf '\nCodex config -> ~/.codex/config.toml:\n'
+
+if [ ! -f "$codex_src" ]; then
+  echo "install: missing from repo: codex/config.toml" >&2
+  exit 1
+fi
+
+codex_want="$(codex_sha "$codex_src")"
+codex_had_state=false
+codex_action=copy
+
+if [ -f "$codex_dst" ] && grep -q '^\[hooks\.state' "$codex_dst"; then
+  codex_had_state=true
+fi
+
+if [ -L "$codex_dst" ]; then
+  printf '  rewrite   .codex/config.toml (was a symlink -> %s)\n' "$(readlink -- "$codex_dst")"
+  run rm -- "$codex_dst"
+elif [ -f "$codex_dst" ]; then
+  codex_have="$(codex_sha "$codex_dst")"
+  codex_installed="$(cat "$codex_stamp" 2>/dev/null || true)"
+  if [ "$codex_have" = "$codex_want" ]; then
+    codex_action=none
+    printf '  ok        .codex/config.toml\n'
+  elif [ -n "$codex_installed" ] && [ "$codex_have" = "$codex_installed" ]; then
+    printf '  copy      .codex/config.toml\n'
+  else
+    # No stamp, or a live file that is neither the repo copy nor the one this
+    # installed: someone edited it there, and that edit is the only copy.
+    backup="$codex_dst.pre-dotfiles.$(date +%Y%m%d%H%M%S)"
+    printf '  BACKUP    .codex/config.toml differs from the repo -> %s\n' "$(basename -- "$backup")"
+    drifted+=(".codex/config.toml")
+    run cp -- "$codex_dst" "$backup"
+  fi
+else
+  printf '  copy      .codex/config.toml\n'
+fi
+
+if [ "$codex_action" = copy ]; then
+  run mkdir -p -- "$(dirname -- "$codex_dst")"
+  run cp -- "$codex_src" "$codex_dst"
+  if [ "$codex_had_state" = true ]; then
+    printf '  note      hook trust was dropped; Codex asks to trust them again\n'
+  fi
+  changed=$((changed + 1))
+fi
+
+if [ "$dry_run" = false ]; then
+  printf '%s\n' "$codex_want" > "$codex_stamp"
+fi
 
 # MCP servers are user scope, which means ~/.claude.json. That file is not a
 # symlink candidate for the same reason ~/.claude is not. Claude Code rewrites it
