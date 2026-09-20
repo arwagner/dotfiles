@@ -18,6 +18,8 @@ developer_instructions = """
 - Never credit Codex, OpenAI, or any AI as an author or co-author. Do not add AI co-author trailers, generated-by footers, or equivalent attribution to commits, pull requests, issues, or comments.
 - Keep reports extremely concise; sacrifice grammar for concision.
 """
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
 
 [tui]
 # Closest equivalents to Claude's fullscreen TUI, disabled spinner tips, and
@@ -133,6 +135,9 @@ timeout = 5
 trust_level = "trusted"
 
 [projects."/Users/andrew/Dropbox/andrew/skylight/code/dtak-prototype"]
+trust_level = "trusted"
+
+[projects."/Users/andrew/Dropbox/andrew/skylight"]
 trust_level = "trusted"
 
 [plugins."spec-flow@personal"]
