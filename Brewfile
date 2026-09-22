@@ -1,6 +1,5 @@
 tap "deskflow/tap"
 tap "felixkratz/formulae", "https://github.com/FelixKratz/homebrew-formulae", trusted: true
-tap "homebrew/bundle"
 tap "mongodb/brew"
 tap "nikitabobko/tap"
 # Zstandard is a real-time compression algorithm
@@ -37,8 +36,6 @@ brew "ocrmypdf"
 brew "openai-whisper"
 # AI coding agent, built for the terminal
 brew "opencode"
-# Cryptography and SSL/TLS Toolkit
-brew "openssl@1.1"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
 # Execute binaries from Python packages in isolated environments
@@ -76,6 +73,9 @@ brew "felixkratz/formulae/sketchybar"
 cask "nikitabobko/tap/aerospace", trusted: true
 # Compact TeX distribution as alternative to the full TeX Live / MacTeX
 cask "basictex"
+# Terminal-based AI coding assistant — bin/install registers the MCP servers
+# through its CLI, and claude/ holds the settings and commands it reads
+cask "claude-code"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
 # Share one keyboard and mouse across machines
