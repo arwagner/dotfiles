@@ -20,6 +20,8 @@ brew "espeak-ng"
 brew "tesseract"
 # Interact with Google Gemini AI models from the command-line
 brew "gemini-cli"
+# GitHub command-line tool — the repo tracks its config in .config/gh
+brew "gh"
 # X.509 and CMS library
 brew "libksba"
 # Generic library support script
