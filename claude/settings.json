@@ -1,4 +1,9 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
   "hooks": {
     "Notification": [
       {
@@ -76,25 +81,20 @@
       }
     }
   },
-  "attribution": {
-    "commit": "",
-    "pr": "",
-    "sessionUrl": false
-  },
   "outputStyle": "default",
   "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark",
   "agentPushNotifEnabled": true,
+  "voiceEnabled": true,
   "DISABLE_TELEMETRY": "1",
   "DISABLE_ERROR_REPORTING": "1",
   "DISABLE_BUG_COMMAND": "1",
   "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
   "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-  "autoUpdates": false,
-  "voiceEnabled": true,
-  "voice": {
-    "enabled": true,
-    "mode": "hold"
-  }
+  "autoUpdates": false
 }
