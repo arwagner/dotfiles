@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# Copy Terminal's default profile into the repo, as terminal/<name>.terminal.
+# Run this after changing the profile in Terminal's settings; bin/install
+# applies the file back.
+#
+# Terminal keeps preferences in memory and writes them on quit, so a change made
+# in its settings window may not be on disk yet. Quit Terminal first, or run
+# this from another terminal, to be sure the export has it.
+
+set -euo pipefail
+
+repo="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+
+python3 - "$repo/terminal" <<'PY'
+import os
+import plistlib
+import subprocess
+import sys
+
+prefs = plistlib.loads(
+    subprocess.run(
+        ["defaults", "export", "com.apple.Terminal", "-"],
+        capture_output=True,
+        check=True,
+    ).stdout
+)
+
+name = prefs.get("Default Window Settings", "Basic")
+profile = prefs.get("Window Settings", {}).get(name)
+if profile is None:
+    sys.exit(f"export-terminal: no {name} profile in com.apple.Terminal")
+
+# XML rather than binary so a change shows up as a readable diff. The file is
+# also a valid .terminal profile, so double-clicking it imports it by hand.
+path = os.path.join(sys.argv[1], name + ".terminal")
+with open(path, "wb") as f:
+    plistlib.dump(profile, f, fmt=plistlib.FMT_XML, sort_keys=True)
+
+print(f"exported {name} -> {os.path.relpath(path)}")
+PY

@@ -248,58 +248,88 @@ SWIFT
   esac
 fi
 
-# Claude Code's /terminal-setup sets one thing in Terminal: Option acts as the
-# Meta key, which is what makes Option+Enter insert a newline instead of sending
-# the prompt. It writes that into com.apple.Terminal and nowhere this repo
-# tracks, so a new machine loses it and the command gets run again by hand.
+# Terminal's profile lives in terminal/<name>.terminal, written by
+# bin/export-terminal, and this puts it back: it replaces the profile of that
+# name in com.apple.Terminal and makes it the default and startup profile. The
+# profile carries the font, colours, bell and cursor, and also Option as the
+# Meta key, which is what Claude Code's /terminal-setup sets so Option+Enter
+# inserts a newline instead of sending the prompt.
 #
-# Applied through `defaults export | ... | defaults import` rather than the
-# shorter `defaults write -dict-add`. Every profile lives in one "Window
-# Settings" dictionary keyed by profile name, and -dict-add replaces a named
-# profile wholesale with the dict it is handed, which would drop the font and
-# colours along the way. Export, edit the one key, import puts it back intact.
+# Applied through `defaults export | ... | defaults import` rather than
+# `defaults write -dict-add`. Every profile lives in one "Window Settings"
+# dictionary keyed by profile name, and -dict-add cannot take the binary font
+# and colour blobs a profile is mostly made of. Export, edit, import leaves the
+# other profiles and preferences intact.
+#
+# A live profile that differs from the repo copy was edited in Terminal and not
+# exported, so it is saved beside the preferences before being replaced.
 #
 # Terminal.app holds its preferences in memory and writes them back when it
 # quits, so a change made from inside a Terminal window can be undone by that
 # write. Quit Terminal fully and reopen it; the next run of this script reports
-# whether the setting survived.
-printf '\nTerminal -> Option as Meta key:\n'
+# whether the profile survived.
+printf '\nTerminal -> default profile:\n'
 
-# Prints one line: "ok <profile>" if it is already set, "set <profile>" if it
-# applied it (or would have, under --dry-run), or "missing <profile>" if the
-# default profile is not in the preferences at all.
-terminal_state="$(python3 - "$dry_run" <<'TERM_PY'
+# Prints one line: "ok <name>" if the live profile and defaults already match,
+# "set <name>" if it applied them (or would have, under --dry-run), "backup
+# <name> <path>" if it also saved a drifted live profile, or "missing" if the
+# repo has no profile.
+terminal_state="$(python3 - "$repo/terminal" "$dry_run" <<'TERM_PY'
+import glob
+import os
 import plistlib
 import subprocess
 import sys
+import time
 
-dry_run = sys.argv[1] == "true"
+files = glob.glob(os.path.join(sys.argv[1], "*.terminal"))
+dry_run = sys.argv[2] == "true"
+
+if len(files) != 1:
+    print("missing")
+    sys.exit()
+
+with open(files[0], "rb") as f:
+    want = plistlib.load(f)
+name = want["name"]
 
 exported = subprocess.run(
     ["defaults", "export", "com.apple.Terminal", "-"],
     capture_output=True,
 ).stdout
 prefs = plistlib.loads(exported) if exported else {}
+profiles = prefs.setdefault("Window Settings", {})
+have = profiles.get(name)
 
-# Terminal falls back to the profile named Basic when it has never been told
-# otherwise, which is the state of a machine this script has not run on yet.
-name = prefs.get("Default Window Settings", "Basic")
-profile = prefs.get("Window Settings", {}).get(name)
-
-if profile is None:
-    print("missing " + name)
-elif profile.get("useOptionAsMetaKey"):
+if (
+    have == want
+    and prefs.get("Default Window Settings") == name
+    and prefs.get("Startup Window Settings") == name
+):
     print("ok " + name)
-elif dry_run:
-    print("set " + name)
-else:
-    profile["useOptionAsMetaKey"] = True
+    sys.exit()
+
+backup = None
+if have is not None and have != want:
+    backup = os.path.expanduser(
+        f"~/Library/Preferences/{name}.terminal.pre-dotfiles."
+        + time.strftime("%Y%m%d%H%M%S")
+    )
+
+if not dry_run:
+    if backup:
+        with open(backup, "wb") as f:
+            plistlib.dump(have, f, fmt=plistlib.FMT_XML, sort_keys=True)
+    profiles[name] = want
+    prefs["Default Window Settings"] = name
+    prefs["Startup Window Settings"] = name
     subprocess.run(
         ["defaults", "import", "com.apple.Terminal", "-"],
         input=plistlib.dumps(prefs),
         check=True,
     )
-    print("set " + name)
+
+print(f"backup {name} {backup}" if backup else "set " + name)
 TERM_PY
 )"
 
@@ -309,7 +339,16 @@ case "$terminal_state" in
     printf '  set       %s profile (quit Terminal and reopen it)\n' "${terminal_state#set }"
     changed=$((changed + 1))
     ;;
-  *) printf '  skipped   no %s profile in com.apple.Terminal\n' "${terminal_state#missing }" ;;
+  "backup "*)
+    rest="${terminal_state#backup }"
+    printf '  BACKUP    %s profile differs from the repo -> %s\n' "${rest%% *}" "$(basename -- "${rest#* }")"
+    drifted+=("Terminal ${rest%% *} profile (in ~/Library/Preferences)")
+    changed=$((changed + 1))
+    ;;
+  *)
+    echo "install: missing from repo: terminal/*.terminal (run bin/export-terminal)" >&2
+    exit 1
+    ;;
 esac
 
 # ~/.codex/config.toml is a copy rather than a symlink, because Codex persists
