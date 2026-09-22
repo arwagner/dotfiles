@@ -13,9 +13,8 @@ path, so a clone anywhere else links cleanly and then fails at runtime.
 ```sh
 git clone git@github.com:arwagner/dotfiles.git ~/dotfiles
 ~/dotfiles/bin/install --dry-run    # see what would change
-~/dotfiles/bin/install
+~/dotfiles/bin/install              # installs Homebrew and the Brewfile too
 
-brew bundle --file ~/dotfiles/Brewfile
 tfenv install && tfenv use <version>
 ~/dotfiles/bin/install-homeassistant   # optional; builds the Home Assistant VM
 exec zsh
@@ -37,7 +36,9 @@ a third, described under [Home Assistant](#home-assistant).
 
 `bin/install` is rerunnable. It reports `ok` for anything already linked, so
 running it after a `git pull` picks up newly tracked files and leaves the rest
-alone. It also runs the `buddy` installer described under [Skills and
+alone. Every run also applies the Brewfile — installing Homebrew itself first if
+the machine has none — so a package added to the Brewfile arrives with the next
+run. It also runs the `buddy` installer described under [Skills and
 subagents](#skills-and-subagents).
 
 ## What gets linked
@@ -242,7 +243,7 @@ Used from the repo in place, so linking them would be redundant:
 
 - `bin/` — on PATH via `.zshrc`
 - `claude/fleet-*.sh` — called by absolute path from `settings.json`
-- `Brewfile` — `brew bundle --file`
+- `Brewfile` — `bin/install` applies it with `brew bundle --file`
 
 `~/.hammerspoon/Spoons` is left over from the leader tree, which loaded the
 Hammerflow spoon from there. Nothing loads a spoon now, so the directory can go

@@ -10,7 +10,9 @@
 # not uniform: .config is linked as a whole directory, claude/ is linked file by
 # file into ~/.claude (that directory is mostly runtime state — transcripts,
 # caches, plugin state — so it cannot be a symlink itself), and bin/, Brewfile
-# and macos/ are used in place and never linked at all.
+# and macos/ are used in place and never linked at all. The Brewfile is applied
+# on every run by the brew bundle section below, which installs Homebrew first
+# if the machine has none.
 #
 # ~/.hammerspoon is file by file for the same reason as ~/.claude: Hammerspoon
 # keeps its console history there.
@@ -167,6 +169,71 @@ else
   fi
   if [ "$dry_run" = false ]; then
     gitconfig_stub > "$dst"
+  fi
+  changed=$((changed + 1))
+fi
+
+# Homebrew is the one thing here that is installed rather than assumed. Nearly
+# everything this repo configures — sketchybar, AeroSpace, the nerd font the bar
+# draws its glyphs with — is a Brewfile entry, so a machine with the config and
+# none of the packages has nothing to configure.
+#
+# The installer is Homebrew's own one-liner, left interactive on purpose: it
+# prints what it is about to do, waits for RETURN, and asks for the sudo
+# password it needs to create /opt/homebrew. This script is run by hand, so that
+# is the right place to answer it.
+#
+# A fresh install is not on PATH yet — .zshrc puts it there, and this shell
+# started before that — so its shellenv is sourced here. /opt/homebrew is
+# hardcoded for the same reason .zshrc hardcodes it: this repo is Apple silicon.
+#
+# `brew bundle` only adds; a package dropped from the Brewfile stays installed
+# because --cleanup is deliberately not passed. `brew bundle check` runs first so
+# that a machine with nothing to install reports one line like every other
+# section here, instead of a screen of Homebrew output.
+brew_prefix="/opt/homebrew"
+
+printf '\nHomebrew -> Brewfile:\n'
+
+if ! command -v brew >/dev/null 2>&1 && [ -x "$brew_prefix/bin/brew" ]; then
+  eval "$("$brew_prefix/bin/brew" shellenv)"
+fi
+
+if ! command -v brew >/dev/null 2>&1; then
+  if [ "$dry_run" = true ]; then
+    printf '  install   Homebrew, and then everything in the Brewfile\n'
+  else
+    printf '  install   Homebrew\n'
+    # Failure is reported below rather than here: an empty $(curl) on a machine
+    # with no network runs nothing and still exits 0.
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || true
+    if [ -x "$brew_prefix/bin/brew" ]; then
+      eval "$("$brew_prefix/bin/brew" shellenv)"
+    fi
+  fi
+  changed=$((changed + 1))
+fi
+
+if ! command -v brew >/dev/null 2>&1; then
+  if [ "$dry_run" = false ]; then
+    printf '  FAILED    brew is still not on PATH; the Brewfile was skipped\n'
+  fi
+elif brew bundle check --file "$repo/Brewfile" >/dev/null 2>&1; then
+  printf '  ok        Brewfile\n'
+elif [ "$dry_run" = true ]; then
+  # --verbose turns the check into one "→ <entry> needs to be ..." line per
+  # unsatisfied entry, wrapped in a sentence either side. It reports on stderr,
+  # hence the 2>&1.
+  missing="$(brew bundle check --file "$repo/Brewfile" --verbose 2>&1 | grep '^→' || true)"
+  printf '  bundle    Brewfile\n'
+  if [ -n "$missing" ]; then
+    printf '%s\n' "$missing" | sed 's/^/              /'
+  fi
+  changed=$((changed + 1))
+else
+  printf '  bundle    Brewfile\n'
+  if ! brew bundle install --file "$repo/Brewfile"; then
+    printf '  FAILED    brew bundle did not finish; rerun install\n'
   fi
   changed=$((changed + 1))
 fi
@@ -646,7 +713,6 @@ fi
 cat <<'NEXT'
 
 Not handled here — the rest of a new machine:
-  brew bundle --file ~/dotfiles/Brewfile   install the packages
   tfenv install && tfenv use <version>     terraform, into ~/.local/share/tfenv
   exec zsh                                 pick up .zshenv and .zshrc
 
