@@ -71,7 +71,8 @@
     "command": "ccstatusline"
   },
   "enabledPlugins": {
-    "spec-flow@skylight": true
+    "spec-flow@skylight": true,
+    "mattpocock-skills@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "skylight": {
