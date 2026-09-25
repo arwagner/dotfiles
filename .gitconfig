@@ -11,4 +11,5 @@
 	editor = code --wait --reuse-window
 [safe]
 	directory = /Users/andrew/actions-runner/*
+	directory = /Users/andrew/Dropbox/andrew/skylight/code/actions-runner/*
 	directory = /Users/andrew/actions-runners/*
