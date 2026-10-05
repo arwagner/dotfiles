@@ -7,6 +7,9 @@ precmd() { vcs_info }
 
 zstyle ':vcs_info:git:*' formats '%b '
 setopt PROMPT_SUBST
+
+# Claude Code: let `echo =====` and unmatched globs like `--include=*.md` pass through instead of erroring
+[[ -n $CLAUDECODE ]] && setopt no_equals no_nomatch
 PROMPT='%F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
