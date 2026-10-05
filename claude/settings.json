@@ -72,13 +72,20 @@
   },
   "enabledPlugins": {
     "spec-flow@skylight": true,
-    "mattpocock-skills@claude-plugins-official": true
+    "mattpocock-skills@mattpocock": true
   },
   "extraKnownMarketplaces": {
     "skylight": {
       "source": {
         "source": "github",
         "repo": "skylight-hq/spec-flow"
+      }
+    },
+    "mattpocock": {
+      "source": {
+        "source": "github",
+        "repo": "mattpocock/skills",
+        "ref": "v1.3.1"
       }
     }
   },
