@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# Print the tail of a Claude Code session: its last N messages and tool calls,
+# one line each, oldest first.
+#
+#   claude-session-tail <sessionId> [n]    # n defaults to 20
+
+set -euo pipefail
+
+id=${1:?usage: claude-session-tail <sessionId> [n]}
+n=${2:-20}
+f=$(ls ~/.claude/projects/*/"$id".jsonl 2>/dev/null | head -1)
+[[ -n $f ]] || { echo "no transcript for session $id" >&2; exit 1; }
+
+# Read whole lines only; a byte-offset tail splits a JSON line and jq stops.
+tail -n 400 "$f" | jq -rR '
+  fromjson? // empty
+  | select(.type == "user" or .type == "assistant")
+  | .type as $t
+  | (.message.content | if type == "string" then [{type: "text", text: .}] else . end)[]?
+  | if .type == "text" then "\($t): \(.text | gsub("\\s+"; " ") | .[0:300])"
+    elif .type == "tool_use" then "tool: \(.name) \(.input | tostring | .[0:150])"
+    else empty end
+' | tail -n "$n"

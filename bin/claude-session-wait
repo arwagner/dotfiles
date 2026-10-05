@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# Block until a Claude Code session receives a new user message (typed in its
+# terminal, or sent by another session), then print it and exit.
+#
+#   claude-session-wait <sessionId>
+
+set -euo pipefail
+
+id=${1:?usage: claude-session-wait <sessionId>}
+f=$(ls ~/.claude/projects/*/"$id".jsonl 2>/dev/null | head -1)
+[[ -n $f ]] || { echo "no transcript for session $id" >&2; exit 1; }
+
+seen=$(wc -l < "$f")
+while :; do
+  sleep 5
+  [[ -f $f ]] || { echo "session $id ended"; exit 0; }
+  msg=$(tail -n +"$((seen + 1))" "$f" | jq -rR '
+    fromjson? // empty
+    | select(.type == "user")
+    | .message.content
+    | if type == "string" then . else (map(select(.type == "text") | .text) | join(" ")) end
+    | select(length > 0 and (startswith("<system-reminder>") | not))
+  ' | head -1)
+  [[ -n $msg ]] && { echo "${msg:0:300}"; exit 0; }
+  seen=$(wc -l < "$f")
+done
