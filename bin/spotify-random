@@ -33,15 +33,16 @@ SCOPES = ("playlist-read-private playlist-read-collaborative "
 SERVICE_PREFIX = "spotify-random-"
 
 # Playlists to draw from, matched by name prefix so new volumes are picked up
-# automatically. Everything else (Christmas, the D&D sets, karaoke, lofi) is
-# left out of the pool.
+# automatically. Everything else (Christmas, the D&D sets) is left out of the
+# pool.
 INCLUDE = (
-    "Pop Odds & Ends",
-    "Pop Hits & Soundtracks",
-    "Pop Covers",
-    "Pop Music",
-    "Celtic Woman",
+    "Adele",
     "Christian",
+    "Energetic",
+    "Katy Perry",
+    "Pop",
+    "Romantic",
+    "Taylor Swift",
 )
 
 
