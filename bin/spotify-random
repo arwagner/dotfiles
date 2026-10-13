@@ -4,7 +4,7 @@
 Usage:
   spotify-random        # pick one of INCLUDE's playlists at random and play it
   spotify-random list   # show which of your playlists INCLUDE matches
-  spotify-random auth   # one-time browser authorization (adds playback control)
+  spotify-random auth   # one-time browser authorization (playback and playlist edits)
 
 Standalone: talks to the Spotify Web API directly, with no other tools or
 libraries involved. Credentials live in the macOS Keychain under
@@ -29,7 +29,8 @@ import urllib.request
 REDIRECT_URI = "http://127.0.0.1:8888/callback"
 SCOPES = ("playlist-read-private playlist-read-collaborative "
           "user-read-currently-playing user-read-playback-state "
-          "user-modify-playback-state")
+          "user-modify-playback-state "
+          "playlist-modify-private playlist-modify-public")
 SERVICE_PREFIX = "spotify-random-"
 
 # Playlists to draw from, matched by name prefix so new volumes are picked up
