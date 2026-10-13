@@ -18,3 +18,7 @@ if [ -f "$HOME/Dropbox/andrew/.env" ]; then
   source "$HOME/Dropbox/andrew/.env"
   set +a
 fi
+
+# Turn off the per-window session save that /etc/zshrc_Apple_Terminal runs on
+# exit, and with it the "Saving session..." lines printed as a shell closes.
+export SHELL_SESSIONS_DISABLE=1
