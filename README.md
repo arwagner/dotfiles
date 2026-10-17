@@ -1,7 +1,7 @@
 # dotfiles
 
 macOS config: zsh, git, AeroSpace tiling with a sketchybar status bar,
-Claude Code's global settings, and a Home Assistant VM.
+and Claude Code's global settings.
 
 ## Setting up a new machine
 
@@ -16,7 +16,6 @@ git clone git@github.com:arwagner/dotfiles.git ~/dotfiles
 ~/dotfiles/bin/install              # installs Homebrew and the Brewfile too
 
 tfenv install && tfenv use <version>
-~/dotfiles/bin/install-homeassistant   # optional; builds the Home Assistant VM
 exec zsh
 ```
 
@@ -31,8 +30,7 @@ launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.andrew.aerospace.p
 Two apps need permissions macOS only grants by hand. Karabiner-Elements needs
 its driver extension approved and then Input Monitoring. Hammerspoon needs
 Accessibility, and "Launch at login" turned on in its own preferences. Until
-both are granted the keyboard behaves as if neither app is installed. UTM needs
-a third, described under [Home Assistant](#home-assistant).
+both are granted the keyboard behaves as if neither app is installed.
 
 `bin/install` is rerunnable. It reports `ok` for anything already linked, so
 running it after a `git pull` picks up newly tracked files and leaves the rest
@@ -57,7 +55,6 @@ uniform:
 | `claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | global instructions |
 | `codex/config.toml` | `~/.codex/config.toml` | Codex CLI settings — **copied**, not linked — see below |
 | `hammerspoon/init.lua` | `~/.hammerspoon/init.lua` | gives Shift-CapsLock back a real Caps Lock |
-| `launchd/com.andrew.homeassistant.plist` | `~/Library/LaunchAgents/…` | starts the Home Assistant VM at login |
 | `launchd/com.andrew.aerospace.plist` | `~/Library/LaunchAgents/…` | starts AeroSpace at login and relaunches it if it crashes |
 | `vscode/settings.json` | `~/Library/Application Support/Code/User/settings.json` | |
 | `vscode/keybindings.json` | `~/Library/Application Support/Code/User/keybindings.json` | |
@@ -185,57 +182,6 @@ list` reports which one.
 Anything already in the way is moved to `*.pre-dotfiles.<timestamp>` rather than
 overwritten, and named in the summary. An identical copy is replaced without a
 backup, since there'd be nothing in it to keep.
-
-## Home Assistant
-
-`bin/install-homeassistant` builds a Home Assistant VM in UTM from nothing: it
-downloads a pinned Home Assistant OS image, checks it against a recorded
-SHA-256, and creates the VM through UTM's AppleScript interface. Rerunning it
-reports `ok` and exits, so it is safe after a `git pull` like `bin/install`.
-
-It is a virtual machine and not a Docker container because Home Assistant OS is
-what the add-on store, the Supervisor and every guide online assume. Running the
-bare container drops all three, and on macOS it also strands Home Assistant
-behind Docker's private network, where the mDNS broadcasts that discover Wi-Fi
-devices never arrive. The VM bridges onto whichever interface carries the
-default route, so it holds its own address on the LAN and discovery works.
-
-UTM rather than VirtualBox, which the Home Assistant docs lead with: VirtualBox
-on Apple Silicon is still a developer preview. UTM drives QEMU with the hardware
-hypervisor, so the aarch64 guest runs at native speed.
-
-Three things the script pins, and they are the whole reason it exists rather
-than a page of instructions: the OS version, the image checksum, and the VM's
-shape — memory, cores, UEFI boot, VirtIO disk, bridged NIC. Two machines running
-it get the same VM.
-
-What it deliberately does not carry is the ~32 GiB disk. That file cannot live
-in git, and it must not live in Dropbox either: a running guest writes to it
-continuously, so a sync client uploads it forever and can drop a half-written
-copy over a live one. The disk is rebuilt from the download instead. The state
-worth keeping travels as Home Assistant's own backup `.tar`, which is small,
-written once, and safe to sync — set that up under Settings > System > Backups.
-
-The compressed download is cached in `~/Library/Caches/dotfiles-haos` rather
-than the repo, so a rebuild after deleting the VM does not fetch 360 MiB again.
-
-Quitting UTM stops every VM it hosts, so the guest dies with the app and a
-reboot leaves nothing running. `launchd/com.andrew.homeassistant.plist` starts
-it again at login. It runs `bin/homeassistant-start`, which opens UTM, waits for
-the VM registry to load, and starts the VM only if it is not already up — so it
-is also the thing to run by hand after an accidental quit. The plist reaches the
-script through `$HOME` rather than a hardcoded path, since launchd sets `HOME`
-for a user agent but does not expand `~` in `ProgramArguments`.
-
-`bin/install` links that plist; `bin/install-homeassistant` is what loads it.
-Linking and loading are separate acts, and a `launchctl bootstrap` for one
-specific service does not belong in the generic installer. launchd is happy to
-bootstrap the symlink and resolves it back to the repo copy, so this one does
-not need the real-file treatment `~/.gitconfig` gets.
-
-Like Karabiner and Hammerspoon, this needs one permission macOS only grants by
-hand: the first run asks to let the terminal control UTM. Denying it fails the
-script with a note rather than hanging.
 
 ## What isn't linked
 
