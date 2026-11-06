@@ -15,3 +15,11 @@ __pycache__/
 
 # osxphotos writes its stock terminal themes on first run. Regenerated if deleted.
 .config/osxphotos/
+
+# herdr keeps logs, sockets and session snapshots next to its config.
+# Only config.toml is a setting.
+.config/herdr/*
+!.config/herdr/config.toml
+
+# opencode has nothing configured yet; it also drops node_modules here.
+.config/opencode/
