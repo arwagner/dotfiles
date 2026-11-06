@@ -1,4 +1,6 @@
-export PATH="/Users/andrew/Downloads/flutter/bin:$PATH"
+# Remove the old SDK path inherited from already-running apps and services.
+path=("${(@)path:#$HOME/Downloads/flutter/bin}")
+export PATH="$HOME/Developer/flutter/bin:$PATH"
 
 # tfenv keeps its downloaded terraform binaries in the same directory as its
 # config, and Homebrew's shims default that to ~/.config/tfenv — which is a
