@@ -38,12 +38,19 @@ SERVICE_PREFIX = "spotify-random-"
 # pool.
 INCLUDE = (
     "Adele",
+    "Anthems",
+    "Big Voices",
     "Christian",
+    "Colbie Caillat",
+    "Covers",
     "Energetic",
     "Katy Perry",
+    "Mellow",
     "Pop",
     "Romantic",
+    "Shania Twain",
     "Taylor Swift",
+    "Throwback",
 )
 
 
