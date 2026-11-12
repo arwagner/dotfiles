@@ -32,6 +32,8 @@ brew "imagemagick"
 brew "libyaml"
 # Open-source, cross-platform JavaScript runtime environment
 brew "node@20"
+# Node 22 — OpenRig's bundled better-sqlite3 prebuild targets its ABI; bin/rig runs it
+brew "node@22"
 # Adds an OCR text layer to scanned PDF files
 brew "ocrmypdf"
 # General-purpose speech recognition model
@@ -116,3 +118,5 @@ vscode "ritwickdey.liveserver"
 vscode "samplavigne.p5-vscode"
 vscode "streetsidesoftware.code-spell-checker"
 npm "corepack"
+# OpenRig agent-team CLI; bin/rig wraps it to run under node@22
+npm "@openrig/cli"

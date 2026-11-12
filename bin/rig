@@ -1,0 +1,5 @@
+#!/bin/sh
+# OpenRig needs Node 22 (its better-sqlite3 prebuild); the default node is newer.
+# Shadows the npm-installed /opt/homebrew/bin/rig, since dotfiles/bin is first on PATH.
+export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
+exec node /opt/homebrew/lib/node_modules/@openrig/cli/dist/bin-wrapper.js "$@"
